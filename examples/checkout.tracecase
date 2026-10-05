@@ -1,0 +1,62 @@
+{
+  "format": "tracecase",
+  "version": "0.1",
+  "title": "Canadian checkout tax failure",
+  "createdAt": "2026-10-05T00:00:00Z",
+  "entryUrl": "http://127.0.0.1:5173/checkout",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "steps": [
+    {
+      "type": "select",
+      "time": 10,
+      "target": [
+        {
+          "kind": "testId",
+          "value": "country"
+        },
+        {
+          "kind": "label",
+          "value": "Country"
+        }
+      ],
+      "value": "CA"
+    },
+    {
+      "type": "fill",
+      "time": 20,
+      "target": [
+        {
+          "kind": "testId",
+          "value": "postal"
+        },
+        {
+          "kind": "label",
+          "value": "Postal code"
+        }
+      ],
+      "value": "V7M 1A1"
+    },
+    {
+      "type": "click",
+      "time": 30,
+      "target": [
+        {
+          "kind": "testId",
+          "value": "continue"
+        },
+        {
+          "kind": "role",
+          "role": "button",
+          "name": "Continue"
+        }
+      ]
+    }
+  ],
+  "failure": {
+    "observedText": "Tax service unavailable",
+    "expectedText": "Order summary is visible"
+  }
+}

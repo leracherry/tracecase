@@ -1,0 +1,28 @@
+{
+  "name": "tracecase-workspace",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test tests/*.test.mjs",
+    "demo": "node fixtures/demo-store/server.mjs",
+    "tracecase": "node dist/cli/src/index.js",
+    "schema": "npm run build && node scripts/schema.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.56.0",
+    "zod": "^4.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0",
+    "@types/node": "^22.0.0"
+  }
+}

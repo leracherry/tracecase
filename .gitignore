@@ -5,3 +5,5 @@ test-results/
 *.local.tracecase
 .env*
 .DS_Store
+.wxt/
+.output/

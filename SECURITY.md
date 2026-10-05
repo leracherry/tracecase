@@ -1,13 +1,21 @@
 # Security
 
-This is an experimental local development tool. Treat recordings as untrusted documents and use a disposable development environment for replay.
+TraceCase is experimental. Use disposable local/staging environments for capture and executable replay.
 
-- Schema validation rejects arbitrary code, unsupported locators, unknown fields and credential-bearing entry URLs.
-- Artifacts are JSON and never unpacked or evaluated. Reads and writes have a 4 MiB limit.
-- Password and hidden inputs, common credential/payment identifiers, and descendants of `[data-private]` are excluded before their values reach recorder storage.
-- No cookies, storage state, network bodies, or console logs are captured. No telemetry or hosted upload is implemented.
-- Replay starts a fresh browser, uses live network, and executes actions against the chosen target. Actions may change application state.
-- Generated recordings may contain sensitive public-input values, URL parameters, labels, and manually supplied failure descriptions. Inspect before sharing.
-- The recorder does not yet support frames, multi-page flows, complete redaction, or adversarial target pages. It is not a sandbox for hostile applications.
+## Untrusted artifact handling
 
-Report security issues privately through the repository owner's GitHub contact rather than publishing secrets in an issue.
+Versioned runtime schemas reject unknown fields, unsupported locators and executable actions. ZIP readers accept only two known entries, enforce packed/expanded limits incrementally, verify SHA-256 integrity, and never extract files to disk. The legacy JSON reader remains bounded. Checksums are not authenticity signatures.
+
+The viewer renders evidence as React text. Visual replay strips active nodes, resource URLs, event handlers and external CSS references. rrweb reconstructs the DOM in an iframe sandboxed with `allow-same-origin` without scripts. Restrictive content security policies block remote resource loading. Artifacts never supply executable application code.
+
+## Capture and privacy
+
+Capture is user-initiated, persists locally, and does not send telemetry or upload recordings. Redaction precedes persistence. Password/private fields, common credential headers, and sensitive JSON/form keys are excluded or masked. Screenshots are opt-in and mask input/private elements. See [redaction](docs/REDACTION.md) and [permissions](docs/PERMISSIONS.md).
+
+A privacy review is required before export, and evidence categories can be excluded. No automated system can identify every sensitive value in arbitrary page text, identifiers, URL paths, or payload fields. Review before sharing. Hostile target pages can spoof or interfere with capture; recordings are evidence rather than tamper-proof audit logs.
+
+## Execution
+
+Executable replay launches a fresh Playwright browser and runs the recorded actions against the selected target with live networking. It can modify application state. It does not import cookies/storage secrets from recordings. Authentication profiles and deterministic fixture replay are future work.
+
+Report security issues privately through the repository owner’s GitHub contact. Do not publish recordings containing secrets in public issues.

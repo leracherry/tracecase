@@ -1,40 +1,79 @@
 # TraceCase
 
-Record a frontend bug once. Run it against your local build.
+Record a frontend bug once. Inspect it locally. Run it against your development build.
 
-Early feasibility prototype: capture semantic browser actions into a portable file, replay the scenario, and distinguish reproducing a bug from verifying its fix. Local files, no account, no backend.
+TraceCase is an experimental local-first Chromium recorder and evidence viewer. It captures semantic actions, visual replay, console errors, environment details, and optionally API context into a portable `.tracecase` file. No account, backend, app SDK, or telemetry.
 
-## Quick start
+## Build & install
 
-Requires Node.js 22 or newer.
+Requires Node.js **22.12 or newer**.
 
 ```sh
 npm ci
 npx playwright install chromium
 npm run build
+```
+
+Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select:
+
+```text
+apps/extension/.output/chrome-mv3
+```
+
+Reload any target tabs that were open during installation.
+
+1. Open your local/staging app and click the TraceCase extension.
+2. Optionally enable enhanced network capture or screenshots. Enhanced capture requests Chrome’s debugger permission and displays Chrome’s debugging banner.
+3. Click **Start recording**, reproduce the bug, then use **Mark bug** and **Stop** in the page overlay.
+4. Inspect the local review page. Select timeline events to seek visual replay and inspect requests, errors, and environment.
+5. Enter the exact observed failure text and the text expected after the fix. Review privacy, optionally exclude evidence categories, and export the file.
+
+Captures persist in local IndexedDB across popup closure and document navigation. The last recording remains available through **Review last recording**. Starting another recording replaces this temporary capture; exported files remain yours.
+
+## Try the demo
+
+```sh
 npm run demo
 ```
 
-In another terminal:
+Open `http://127.0.0.1:5173/checkout`, select Canada, enter a postal code, and click Continue. The page shows `Tax service unavailable`. Record this failure and use `Order summary is visible` as the expected outcome.
+
+```sh
+npm run tracecase -- open recording.tracecase
+npm run tracecase -- inspect recording.tracecase
+npm run tracecase -- run recording.tracecase --url http://127.0.0.1:5173
+# FAILURE REPRODUCED
+```
+
+A checked-in prototype example is available without extension capture:
 
 ```sh
 npm run tracecase -- run examples/checkout.tracecase --url http://127.0.0.1:5173
-# FAILURE REPRODUCED
-npm run tracecase -- record http://127.0.0.1:5173/checkout --out checkout.local.tracecase
-npm run tracecase -- inspect checkout.local.tracecase
 ```
 
-During recording, choose Canada, fill a postal code, and click Continue. Press Enter in the terminal to stop. Enter `Tax service unavailable` as the observed failure and `Order summary is visible` as the expected behavior.
-
-To verify the fix, stop the demo server and restart it with:
+To check the fix, stop the demo and restart it with:
 
 ```sh
 TRACECASE_DEMO_FIXED=1 npm run demo
-npm run tracecase -- verify examples/checkout.tracecase --url http://127.0.0.1:5173
+npm run tracecase -- verify recording.tracecase --url http://127.0.0.1:5173
 # VERIFIED
 ```
 
-`run` checks the recorded failure when present. `verify` checks the desired outcome. Failed actions or assertions return a nonzero exit status. Without a failure marker, `run` reports only that actions completed.
+`run` checks observed failure text when present. `verify` checks the expected outcome. Failed actions/assertions return a nonzero status. Without a marker, `run` reports only completed actions. Networking during executable replay is currently **live**.
+
+The original interactive Playwright recorder remains available:
+
+```sh
+npm run tracecase -- record http://127.0.0.1:5173/checkout --out checkout.local.tracecase
+```
+
+## Local viewer
+
+`open` serves the built viewer on a random loopback port and opens your browser. It does not upload evidence. Press Ctrl+C to stop the server. Use `--no-browser` to print the URL without launching a browser. The viewer also accepts file selection and drag/drop.
+
+```sh
+npm run dev -w @tracecase/viewer
+```
 
 ## Development
 
@@ -44,21 +83,26 @@ npm test
 npm run schema
 ```
 
-The browser suite records and replays 20 checkout variations and checks private-field exclusion, fallback locators, divergence, and both buggy and fixed behavior. GitHub Actions runs the same checks.
+Tests build the production extension/viewer, replay 20 captured checkout variations, exercise real MV3 standard/enhanced capture through navigation, export files and replay them, verify privacy and size limits, and inspect malicious artifacts in the local viewer. Enhanced-mode browser tests pregrant the optional debugger permission in a temporary test manifest; the shipped extension requests it interactively.
 
-| Package | Responsibility |
-| --- | --- |
-| schema | Runtime validation and JSON Schema |
-| recorder | Top-frame semantic actions and sensitive-input exclusion |
-| replay | Playwright execution, locator fallback, failure verification |
-| cli | Interactive capture, inspection, run, verify |
+| Area               | Responsibility                                                   |
+| ------------------ | ---------------------------------------------------------------- |
+| apps/extension     | WXT Manifest V3 popup, overlay, persistent capture, review       |
+| apps/viewer        | React/Vite inspector, timeline and sandboxed rrweb visual replay |
+| packages/schema    | Runtime validation and published JSON Schema                     |
+| packages/artifact  | Bounded ZIP packaging, integrity checks, legacy JSON support     |
+| packages/capture   | Semantic click/fill/select/key and navigation capture            |
+| packages/redaction | Private fields, credentials, JSON/form fields, URL redaction     |
+| packages/recorder  | Original Playwright recorder                                     |
+| packages/replay    | Executable playback, locator fallback, failure verification      |
+| packages/cli       | Record, open, inspect, run, verify                               |
 
-## Current scope
+## Supported scope
 
-This starts milestone 0 of the research plan. V0.1 `.tracecase` files are bounded, schema-validated JSON; the future ZIP evidence container is not implemented. The recorder uses a headed Playwright browser rather than an extension. It captures top-frame click, fill, and select actions using test IDs, roles, labels, and placeholders. Unsupported targets are skipped.
+Chromium top-frame HTTP(S) pages, including ordinary SPA history changes and document navigation. Locators use test IDs, accessible roles/names, labels, and placeholders. Unsupported targets are reported as capture gaps. The key recorder supports Enter, Escape, Tab, and arrow keys.
 
-Multi-page flows, SPA navigation capture, frames, shadow DOM, visual replay, network fixtures, console capture, authentication profiles, test export, and the viewer remain future work. Do not use this prototype to record sensitive production sessions: it excludes common private fields but does not provide complete redaction for URLs, labels, or public text inputs. Replay uses the live target application and may perform writes there.
+Enhanced mode captures fetch/XHR request metadata, response status/timing, and bounded JSON/form bodies. Other text, binary bodies, media, canvas, iframe capture, shadow-DOM action targeting, and full redirect chains are not supported. Screenshots are opt-in; inputs/private selectors are masked, but other visible data requires review. Styles referenced from external stylesheets are not fetched during replay, so visual fidelity can differ.
 
-See [format](docs/TRACECASE_FORMAT.md), [security](SECURITY.md), and [roadmap](docs/ROADMAP.md).
+Automatic redaction is conservative but cannot identify every secret in arbitrary text. Use local/staging environments and review recordings before sharing. See [security](SECURITY.md), [permissions](docs/PERMISSIONS.md), [format](docs/TRACECASE_FORMAT.md), and [roadmap](docs/ROADMAP.md).
 
 MIT licensed.

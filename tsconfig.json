@@ -8,14 +8,8 @@
     "rootDir": "packages",
     "declaration": true,
     "sourceMap": true,
-    "lib": [
-      "ES2022",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "skipLibCheck": true
   },
-  "include": [
-    "packages/**/*.ts"
-  ]
+  "include": ["packages/**/*.ts"]
 }

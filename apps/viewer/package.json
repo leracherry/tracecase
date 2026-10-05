@@ -1,0 +1,11 @@
+{
+  "name": "@tracecase/viewer",
+  "version": "0.0.2",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite --host 127.0.0.1",
+    "check": "tsc --noEmit"
+  }
+}

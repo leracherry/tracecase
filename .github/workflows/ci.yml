@@ -15,3 +15,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run check
       - run: npm test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tracecase-chrome-extension
+          path: apps/extension/.output/chrome-mv3
+          include-hidden-files: true

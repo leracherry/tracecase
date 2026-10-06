@@ -2,6 +2,9 @@
 
 ## 0.1.0-alpha.1 — prepared
 
+- Refine shared spacing, typography, panel/control radii, input contrast and 44px controls across the viewer and popup.
+- Improve empty states, drag-and-drop feedback, keyboard navigation, privacy links, filter resets and recording-action feedback; verify responsive layouts from 320px to 1440px.
+
 - Add standalone Playwright test bundles, expected/observed assertions, formatting and editor links.
 - Add compact agent context, Markdown issue drafts, read-only MCP, artifact validation and a composite CI verification action.
 - Add viewer export previews/downloads using edited outcomes and privacy exclusions, with responsive section navigation.

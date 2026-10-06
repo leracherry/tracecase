@@ -352,6 +352,73 @@ test(
         buffer: Buffer.from("invalid"),
       });
       await page.getByRole("alert").waitFor();
+      await page.goto(new URL("/", url).href);
+      await page.getByRole("button", { name: "Choose a recording" }).waitFor();
+      const chooserPromise = page.waitForEvent("filechooser");
+      await page.getByRole("button", { name: "Choose a recording" }).click();
+      const chooser = await chooserPromise;
+      await page.screenshot({
+        path: join(tmpdir(), "tracecase-empty-desktop.png"),
+        fullPage: true,
+      });
+      await chooser.setFiles(path);
+      await page
+        .getByRole("heading", { name: artifact.title, exact: true })
+        .waitFor();
+      // Opening another recording must reset filters and privacy consent.
+      await page.getByLabel("Open artifact").setInputFiles({
+        name: "simple.tracecase",
+        mimeType: "application/json",
+        buffer: Buffer.from(
+          JSON.stringify({ ...sample, title: "A".repeat(240) }),
+        ),
+      });
+      await page
+        .getByRole("heading", { name: "No visual replay available" })
+        .waitFor();
+      assert.equal(await page.getByLabel("Search timeline").inputValue(), "");
+      assert.equal(
+        await page.getByLabel("Filter timeline").inputValue(),
+        "all",
+      );
+      assert.equal(
+        await page
+          .getByLabel("I reviewed the evidence for sensitive content.")
+          .isChecked(),
+        false,
+      );
+      await page.getByLabel("Search timeline").fill("no such event");
+      await page.getByRole("button", { name: "Clear filters" }).click();
+      assert.equal(await page.locator(".row").count(), sample.steps.length);
+      for (const width of [320, 390, 768, 1024, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        assert.ok(
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
+          `overflow at ${width}px`,
+        );
+      }
+      await page.keyboard.press("ControlOrMeta+Home");
+      await page.locator(".skip-link").focus();
+      await page.keyboard.press("Enter");
+      assert.equal(
+        await page.evaluate(() => document.activeElement.id),
+        "main-content",
+      );
+      // Touch targets and keyboard focus remain usable at narrow widths.
+      await page.setViewportSize({ width: 390, height: 844 });
+      assert.ok(
+        (
+          await page
+            .getByRole("button", { name: "Export reviewed artifact" })
+            .boundingBox()
+        ).height >= 44,
+      );
+      await page.screenshot({
+        path: join(tmpdir(), "tracecase-polished-mobile.png"),
+        fullPage: true,
+      });
     } finally {
       child.kill("SIGINT");
       await browser.close();

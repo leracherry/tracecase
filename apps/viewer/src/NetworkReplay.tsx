@@ -52,10 +52,14 @@ export function NetworkReplay({ artifact }: { artifact: Artifact }) {
         );
       setReport(value);
       setError("");
-    } catch {
+    } catch (error) {
       setReport(undefined);
       setError(
-        "Unable to load report. Choose a recorded-network replay report for this exact artifact (report version 1.1, up to 4 MiB).",
+        error instanceof Error &&
+          (error.message.startsWith("This report belongs") ||
+            error.message.startsWith("Replay report exceeds"))
+          ? error.message
+          : "Unable to load report. Choose a recorded-network replay report for this exact artifact (report version 1.1, up to 4 MiB).",
       );
     }
   }
@@ -155,7 +159,12 @@ export function NetworkReplay({ artifact }: { artifact: Artifact }) {
               include all observed requests.
             </p>
           )}
-          <div className="table-scroll">
+          <div
+            className="table-scroll"
+            tabIndex={0}
+            role="region"
+            aria-label="Scrollable request details"
+          >
             <table>
               <caption className="muted">API request results</caption>
               <thead>
@@ -201,7 +210,12 @@ export function NetworkReplay({ artifact }: { artifact: Artifact }) {
           <summary>
             Unavailable responses ({plan.total - plan.eligible})
           </summary>
-          <div className="table-scroll">
+          <div
+            className="table-scroll"
+            tabIndex={0}
+            role="region"
+            aria-label="Scrollable request details"
+          >
             <table>
               <thead>
                 <tr>

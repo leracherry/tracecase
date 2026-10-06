@@ -71,6 +71,14 @@ for (const enhanced of [false, true])
         const popup = await context.newPage();
         await popup.goto(`chrome-extension://${id}/popup.html`);
 
+        await popup
+          .locator("body")
+          .screenshot({
+            path: join(
+              tmpdir(),
+              `tracecase-popup-${enhanced ? "enhanced" : "standard"}.png`,
+            ),
+          });
         const tabId = await worker.evaluate(
           async (url) =>
             (await chrome.tabs.query({})).find((tab) => tab.url === url).id,
@@ -86,6 +94,23 @@ for (const enhanced of [false, true])
           screenshots: enhanced,
         });
 
+        await popup.reload();
+        await popup.getByRole("button", { name: "Stop & review" }).waitFor();
+        assert.equal(
+          await popup.getByLabel("Enhanced network capture").isDisabled(),
+          true,
+        );
+        assert.equal(
+          await popup.getByLabel("Include screenshots").isChecked(),
+          enhanced,
+        );
+        await popup
+          .getByRole("button", { name: "Mark bug", exact: true })
+          .click();
+        await popup
+          .getByText("Bug marked. Keep recording or stop to review.")
+          .waitFor();
+        await target.bringToFront();
         await target
           .locator("[data-tracecase-ignore]")
           .filter({
@@ -185,7 +210,8 @@ for (const enhanced of [false, true])
         assert.ok(artifact.evidence.privacy.excludedInputs > 0);
         assert.ok(!JSON.stringify(artifact).includes("DO_NOT_PERSIST"));
         if (enhanced) {
-          assert.equal(artifact.evidence.screenshots.length, 3);
+          // Start, popup marker, in-page marker, and stop each capture a frame.
+          assert.equal(artifact.evidence.screenshots.length, 4);
           assert.ok(
             artifact.evidence.network.some(
               (r) =>

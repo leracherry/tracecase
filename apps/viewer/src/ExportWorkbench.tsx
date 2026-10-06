@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { zipSync, strToU8 } from "fflate";
 import type { Artifact } from "../../../packages/schema/src/index.js";
 import { exportPlaywright } from "../../../packages/playwright-export/src/index.js";
@@ -18,6 +18,7 @@ export function ExportWorkbench({
     [assertion, setAssertion] = useState<"expected" | "observed">("expected"),
     [url, setUrl] = useState("http://localhost:5173"),
     [notice, setNotice] = useState("");
+  useEffect(() => setNotice(""), [artifact, kind, network, assertion, url]);
   const output = useMemo(() => {
     try {
       if (kind === "test")
@@ -158,7 +159,7 @@ export function ExportWorkbench({
           )}
           {!reviewed && (
             <p className="hint">
-              Complete the privacy review above to download.
+              <a href="#review">Complete the privacy review</a> to download.
             </p>
           )}
           <button
@@ -172,7 +173,9 @@ export function ExportWorkbench({
                 ? "Download issue draft"
                 : "Download agent context"}
           </button>
-          <p role="status">{notice}</p>
+          <p className="notice" role="status">
+            {notice}
+          </p>
         </div>
         <div className="export-preview">
           {output.error ? (

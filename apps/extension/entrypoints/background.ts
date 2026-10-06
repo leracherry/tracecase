@@ -182,6 +182,7 @@ export default defineBackground(() => {
               ? {
                   tabId: s.tabId,
                   active: s.active,
+                  screenshots: s.screenshots,
                   mode: s.artifact.evidence.capabilities.mode,
                   warnings: s.artifact.evidence.capabilities.warnings,
                 }

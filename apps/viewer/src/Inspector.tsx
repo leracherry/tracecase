@@ -37,6 +37,8 @@ export function Inspector({ initial }: { initial?: Artifact }) {
     [includeConsole, setIncludeConsole] = useState(true);
   const [downloadNotice, setDownloadNotice] = useState("");
   const [hasPlayer, setHasPlayer] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const fileInput = useRef<HTMLInputElement>(null);
   const replayRoot = useRef<HTMLDivElement>(null),
     player = useRef<Replayer | undefined>(undefined);
   const evidence = artifact?.version === "0.2" ? artifact.evidence : undefined;
@@ -49,6 +51,8 @@ export function Inspector({ initial }: { initial?: Artifact }) {
       setArtifact(value);
       setError("");
       setSelected(undefined);
+      setSearch("");
+      setFilter("all");
       setReviewed(false);
       setPlaying(false);
       setDownloadNotice("");
@@ -74,6 +78,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
     const root = replayRoot.current;
     if (!root) return;
     root.replaceChildren();
+    root.style.height = "";
     player.current = undefined;
     setHasPlayer(false);
     if (!evidence?.visual.length || evidence.visual.length < 2) return;
@@ -231,13 +236,30 @@ export function Inspector({ initial }: { initial?: Artifact }) {
   }
   return (
     <main
-      onDragOver={(e) => e.preventDefault()}
+      className={dragging ? "dragging" : undefined}
+      onDragOver={(e) => {
+        e.preventDefault();
+        if (e.dataTransfer.types.includes("Files")) setDragging(true);
+      }}
+      onDragLeave={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node | null))
+          setDragging(false);
+      }}
       onDrop={(e) => {
         e.preventDefault();
+        setDragging(false);
         const file = e.dataTransfer.files[0];
         if (file) void load(file);
       }}
     >
+      <a className="skip-link" href="#main-content">
+        Skip to recording
+      </a>
+      {dragging && (
+        <div className="drop-overlay" aria-hidden="true">
+          Drop your recording to open it
+        </div>
+      )}
       <header>
         <a className="brand" href="#">
           <img src="/tracecase-logo.png" width="32" height="32" alt="" />
@@ -247,6 +269,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
         <label className="button">
           Open artifact
           <input
+            ref={fileInput}
             aria-label="Open artifact"
             type="file"
             accept=".tracecase,.json"
@@ -263,7 +286,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
         </div>
       )}
       {!artifact ? (
-        <section className="empty">
+        <section className="empty" id="main-content" tabIndex={-1}>
           <p className="eyebrow">A BUG IS A RUNNABLE ARTIFACT</p>
           <h1>
             See what failed.
@@ -271,13 +294,20 @@ export function Inspector({ initial }: { initial?: Artifact }) {
             Replay the evidence.
           </h1>
           <p>
-            Drop a .tracecase file here to inspect its actions, replay, console,
-            and requests. Your recording stays in this browser.
+            Open or drop a .tracecase file here to inspect its actions, replay,
+            console, and requests. Your recording stays in this browser.
           </p>
+          <button
+            className="primary"
+            onClick={() => fileInput.current?.click()}
+          >
+            Choose a recording
+          </button>
+          <p className="hint">.tracecase or legacy .json · up to 8 MiB</p>
         </section>
       ) : (
         <>
-          <section className="summary">
+          <section className="summary" id="main-content" tabIndex={-1}>
             <div>
               <p className="eyebrow">
                 {evidence?.capabilities.mode || "PROTOTYPE"} CAPTURE
@@ -357,7 +387,25 @@ export function Inspector({ initial }: { initial?: Artifact }) {
                     <span>{row.message}</span>
                   </button>
                 ))}
-                {!visible.length && <p>No matching events.</p>}
+                {!visible.length && (
+                  <div className="timeline-empty">
+                    <p>
+                      {rows.length
+                        ? "No matching events."
+                        : "No events were captured."}
+                    </p>
+                    {rows.length > 0 && (
+                      <button
+                        onClick={() => {
+                          setSearch("");
+                          setFilter("all");
+                        }}
+                      >
+                        Clear filters
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </aside>
             <section className="visual">
@@ -368,16 +416,31 @@ export function Inspector({ initial }: { initial?: Artifact }) {
                   onClick={() => {
                     if (!player.current) return;
                     if (playing) player.current.pause();
-                    else player.current.play(player.current.getCurrentTime());
+                    else {
+                      const current = player.current.getCurrentTime();
+                      player.current.play(
+                        current >= player.current.getMetaData().totalTime
+                          ? 0
+                          : current,
+                      );
+                    }
                     setPlaying(!playing);
                   }}
                 >
                   {playing ? "Pause" : "Play"}
                 </button>
               </div>
-              <div className="player" ref={replayRoot} />
-              {!evidence?.visual.length && (
-                <p className="muted">This artifact has no visual recording.</p>
+              <div className="player" ref={replayRoot} hidden={!hasPlayer} />
+              {!hasPlayer && (
+                <div className="replay-empty">
+                  <span className="empty-symbol" aria-hidden="true">
+                    ▷
+                  </span>
+                  <h3>No visual replay available</h3>
+                  <p>
+                    Use the timeline to inspect captured actions and requests.
+                  </p>
+                </div>
               )}
               <div className="screenshots">
                 {evidence?.screenshots.map((shot, i) => (
@@ -448,7 +511,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
                 is a baseline, not a guarantee.
               </p>
               <div className="export-options">
-                <span>Include in export:</span>
+                <span className="export-options-title">Include in export</span>
                 {[
                   ["Visual replay", includeVisual, setIncludeVisual],
                   ["Screenshots", includeScreenshots, setIncludeScreenshots],
@@ -482,7 +545,9 @@ export function Inspector({ initial }: { initial?: Artifact }) {
               >
                 Export reviewed artifact
               </button>
-              <p role="status">{downloadNotice}</p>
+              <p className="notice" role="status">
+                {downloadNotice}
+              </p>
               <p className="hint">
                 Run locally:{" "}
                 <code>

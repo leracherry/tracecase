@@ -2,8 +2,8 @@ body {
   width: 310px;
   margin: 0;
   padding: 24px;
-  background: #f5f3ed;
-  color: #18332c;
+  background: #f5f8fc;
+  color: #12304d;
   font: 14px system-ui;
 }
 small {
@@ -35,9 +35,15 @@ button {
 }
 #start,
 #stop {
-  background: #185b46;
+  background: #0155ab;
   color: white;
 }
 button[hidden] {
   display: none;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }

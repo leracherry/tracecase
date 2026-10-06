@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
-import { resolve, extname } from "node:path";
+import { resolve, extname, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomBytes } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -28,7 +28,7 @@ export async function openViewer(
     }
     const relative = path === "/" ? "index.html" : path.slice(1);
     const absolute = resolve(root, relative);
-    if (!absolute.startsWith(root + "/")) {
+    if (!absolute.startsWith(root + sep)) {
       res.writeHead(403);
       res.end();
       return;
@@ -42,6 +42,7 @@ export async function openViewer(
             ".js": "text/javascript",
             ".css": "text/css",
             ".svg": "image/svg+xml",
+            ".png": "image/png",
           } as Record<string, string>
         )[extname(absolute)] || "application/octet-stream",
       );

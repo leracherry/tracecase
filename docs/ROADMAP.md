@@ -22,9 +22,18 @@ Explicit enhanced debugger capture, fetch/XHR metadata/status/timing, bounded JS
 
 Limitations: no binary/free-form text bodies, full redirect-chain reconstruction, WebSocket replay or complete secret detection. Custom redactors and independent security review remain future hardening.
 
+## Milestone 4 — advanced replay implemented
+
+Structured JSON replay reports, per-step progress and locator diagnostics, bounded console warnings/errors, configurable waits, explicit interactive semantic-locator repair, saved repaired artifacts, and actual React/Vue/Svelte capture/replay scenarios. Failure reproduction and expected-outcome verification remain separate.
+
+Actions are not retried after they start. Repairs require an explicit selection, and reports distinguish action divergence from failed outcome assertions. Broader real-world application validation remains a release-quality gate.
+
+## Release preparation
+
+Shared prerelease version, T-mark branding in `#0155AB`, version validation, Node 22/24 CI, packaged CLI/extension/viewer assets, checksum generation, clean-install smoke testing, and a tag-triggered draft-release workflow. npm and Chrome Web Store publication are separate future distribution steps.
+
 ## Next milestones
 
-4. Replay reports, console output, locator repair, and a representative React/Vue/Svelte scenario suite. Basic executable replay already consumes extension artifacts and supports key/navigation actions.
 5. Deterministic API fixtures, occurrence/body matching, divergence controls and coverage reports.
 6. Playwright test export using expected behavior and optional fixtures.
 7. Agent context export, MCP, issue Markdown and CI artifact verification.

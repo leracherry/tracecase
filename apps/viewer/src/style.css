@@ -3,8 +3,8 @@
 }
 body {
   margin: 0;
-  background: #f4f2ed;
-  color: #19332b;
+  background: #f5f8fc;
+  color: #12304d;
   font:
     14px system-ui,
     -apple-system,
@@ -163,7 +163,7 @@ h2 {
   border-left-color: #278765;
 }
 .row.selected {
-  background: #e7efe7;
+  background: #e8f2fc;
 }
 .detail {
   border-left: 1px solid #d8e0d9;
@@ -233,7 +233,7 @@ h2 {
   border-radius: 5px;
 }
 .review button {
-  background: #185b46;
+  background: #0155ab;
   color: white;
   margin-top: 16px;
 }
@@ -309,4 +309,13 @@ summary {
   display: flex;
   align-items: center;
   gap: 5px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.brand img {
+  object-fit: contain;
 }

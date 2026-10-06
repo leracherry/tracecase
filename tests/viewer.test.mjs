@@ -192,13 +192,11 @@ test(
       assert.equal(exported.evidence.network.length, 0);
       assert.ok(!exported.evidence.events.some((e) => e.type === "console"));
       assert.ok(exported.evidence.events.some((e) => e.type === "marker"));
-      await page
-        .getByLabel("Open artifact")
-        .setInputFiles({
-          name: "bad.tracecase",
-          mimeType: "application/zip",
-          buffer: Buffer.from("invalid"),
-        });
+      await page.getByLabel("Open artifact").setInputFiles({
+        name: "bad.tracecase",
+        mimeType: "application/zip",
+        buffer: Buffer.from("invalid"),
+      });
       await page.getByRole("alert").waitFor();
     } finally {
       child.kill("SIGINT");

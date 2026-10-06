@@ -1,6 +1,6 @@
 {
   "name": "@tracecase/redaction",
-  "version": "0.0.2",
+  "version": "0.1.0-alpha.1",
   "private": true,
   "type": "module"
 }

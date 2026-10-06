@@ -7,3 +7,7 @@ test-results/
 .DS_Store
 .wxt/
 .output/
+
+release/
+.releases/
+apps/*/public/tracecase-logo.png

@@ -1,7 +1,7 @@
 {
   "name": "tracecase-workspace",
   "private": true,
-  "version": "0.0.2",
+  "version": "0.1.0-alpha.1",
   "type": "module",
   "workspaces": [
     "packages/*",
@@ -13,15 +13,21 @@
   "scripts": {
     "build": "npm run build:core && npm run build:extension && npm run build:viewer",
     "check": "npm run check:core && npm run check -w @tracecase/extension && npm run check -w @tracecase/viewer",
-    "test": "npm run build && node --test tests/*.test.mjs",
+    "test": "npm run build && npm run build:fixtures && npm run test:built",
     "demo": "node fixtures/demo-store/server.mjs",
     "tracecase": "node dist/cli/src/index.js",
     "schema": "npm run build:core && node scripts/schema.mjs",
     "build:core": "tsc -p tsconfig.json",
-    "build:extension": "npm run build -w @tracecase/extension",
-    "build:viewer": "npm run build -w @tracecase/viewer",
+    "build:extension": "npm run brand && npm run build -w @tracecase/extension",
+    "build:viewer": "npm run brand && npm run build -w @tracecase/viewer",
     "check:core": "tsc -p tsconfig.json --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "brand": "node scripts/sync-brand.mjs",
+    "build:fixtures": "vite build --config fixtures/frameworks/vite.config.mjs",
+    "test:built": "node --test tests/*.test.mjs",
+    "release:check": "node scripts/releases/check.mjs",
+    "release:pack": "node scripts/releases/pack.mjs",
+    "release:smoke": "node scripts/releases/smoke.mjs"
   },
   "dependencies": {
     "fflate": "^0.8.3",
@@ -33,13 +39,16 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
+    "@sveltejs/vite-plugin-svelte": "^5.1.1",
     "@types/chrome": "^0.3.4",
     "@types/node": "^22.0.0",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "prettier": "^3.9.9",
+    "svelte": "^5.57.1",
     "typescript": "^5.9.0",
     "vite": "^6.4.3",
+    "vue": "^3.5.43",
     "wxt": "^0.21.4"
   }
 }

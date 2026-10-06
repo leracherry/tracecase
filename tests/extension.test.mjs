@@ -232,7 +232,10 @@ for (const enhanced of [false, true])
         assert.equal(exported.evidence.privacy.reviewed, true);
         assert.equal(await replay(exported, { url }), "FAILURE REPRODUCED");
         await review.screenshot({
-          path: `/private/tmp/tracecase-${enhanced ? "enhanced" : "standard"}-review.png`,
+          path: join(
+            tmpdir(),
+            `tracecase-${enhanced ? "enhanced" : "standard"}-review.png`,
+          ),
           fullPage: true,
         });
       } finally {

@@ -106,7 +106,7 @@ export default defineContentScript({
       overlay = document.createElement("div");
       overlay.dataset.tracecaseIgnore = "";
       overlay.style.cssText =
-        "position:fixed;bottom:20px;right:20px;z-index:2147483647;background:#182a27;color:white;padding:12px;border-radius:8px;font:14px system-ui;display:flex;gap:12px;box-shadow:0 4px 24px #0004;";
+        "position:fixed;bottom:20px;right:20px;z-index:2147483647;background:#12304D;color:white;padding:12px;border-radius:8px;font:14px system-ui;display:flex;gap:12px;box-shadow:0 4px 24px #0004;";
       const label = document.createElement("span");
       label.textContent = "● Recording";
       overlay.append(label);

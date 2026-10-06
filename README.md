@@ -1,4 +1,12 @@
+<p align="center"><img src="docs/assets/tracecase-logo.png" width="150" alt="TraceCase T logo" /></p>
+
 # TraceCase
+
+[![CI](https://github.com/leracherry/tracecase/actions/workflows/ci.yml/badge.svg)](https://github.com/leracherry/tracecase/actions/workflows/ci.yml)
+[![Release](https://github.com/leracherry/tracecase/actions/workflows/release.yml/badge.svg)](https://github.com/leracherry/tracecase/actions/workflows/release.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-0155AB.svg)](LICENSE)
+
+**0.1.0-alpha.1 is being prepared.** Source builds are available now; release bundles are produced by GitHub Actions. This is an experimental Chromium developer tool.
 
 Record a frontend bug once. Inspect it locally. Run it against your development build.
 
@@ -67,6 +75,22 @@ The original interactive Playwright recorder remains available:
 npm run tracecase -- record http://127.0.0.1:5173/checkout --out checkout.local.tracecase
 ```
 
+## Replay diagnostics and repair
+
+```sh
+npm run tracecase -- run recording.tracecase --url http://127.0.0.1:5173 --report replay.json
+npm run tracecase -- run recording.tracecase --url http://127.0.0.1:5173 --repair --save-repaired repaired.tracecase
+npm run tracecase -- verify recording.tracecase --url http://127.0.0.1:5173 --json
+```
+
+Reports distinguish missing/ambiguous locators, action divergence and failed assertions. Repair opens a visible browser and asks you to choose a semantic replacement; the original recording remains unchanged. See [replay behavior and report statuses](docs/REPLAY.md).
+
+## Release packages
+
+The [Release workflow](https://github.com/leracherry/tracecase/actions/workflows/release.yml) builds and tests an installable CLI tarball, unpacked Chrome extension ZIP, and local viewer ZIP with checksums. Manual runs rehearse packaging; matching version tags create draft releases after all checks pass. Publishing remains an explicit maintainer step.
+
+See [release preparation and installation](docs/RELEASING.md), [release notes](docs/RELEASE_NOTES.md), and [changelog](CHANGELOG.md).
+
 ## Local viewer
 
 `open` serves the built viewer on a random loopback port and opens your browser. It does not upload evidence. Press Ctrl+C to stop the server. Use `--no-browser` to print the URL without launching a browser. The viewer also accepts file selection and drag/drop.
@@ -83,7 +107,7 @@ npm test
 npm run schema
 ```
 
-Tests build the production extension/viewer, replay 20 captured checkout variations, exercise real MV3 standard/enhanced capture through navigation, export files and replay them, verify privacy and size limits, and inspect malicious artifacts in the local viewer. Enhanced-mode browser tests pregrant the optional debugger permission in a temporary test manifest; the shipped extension requests it interactively.
+Tests build the production extension/viewer, replay 20 captured checkout variations, exercise real MV3 standard/enhanced capture through navigation, export files and replay them, verify privacy and size limits, inspect malicious artifacts in the local viewer, and validate advanced replay/repair against actual React, Vue and Svelte fixtures. Enhanced-mode browser tests pregrant the optional debugger permission in a temporary test manifest; the shipped extension requests it interactively.
 
 | Area               | Responsibility                                                   |
 | ------------------ | ---------------------------------------------------------------- |
@@ -105,4 +129,4 @@ Enhanced mode captures fetch/XHR request metadata, response status/timing, and b
 
 Automatic redaction is conservative but cannot identify every secret in arbitrary text. Use local/staging environments and review recordings before sharing. See [security](SECURITY.md), [permissions](docs/PERMISSIONS.md), [format](docs/TRACECASE_FORMAT.md), and [roadmap](docs/ROADMAP.md).
 
-MIT licensed.
+MIT licensed. See [contributing](CONTRIBUTING.md) and the [brand guide](docs/BRAND.md).

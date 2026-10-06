@@ -2,26 +2,39 @@
 import { readFile, writeFile, stat } from "node:fs/promises";
 import { createInterface } from "node:readline/promises";
 import { chromium } from "playwright";
-import {
-  parseArtifact,
-  serializeArtifact,
-  MAX_ARTIFACT_BYTES,
-  type Artifact,
-} from "../../schema/src/index.js";
+import { serializeArtifact, type Artifact } from "../../schema/src/index.js";
 import { attachRecorder } from "../../recorder/src/index.js";
-import { unpackArtifact, MAX_PACKED_BYTES } from "../../artifact/src/index.js";
+import {
+  unpackArtifact,
+  packArtifact,
+  MAX_PACKED_BYTES,
+} from "../../artifact/src/index.js";
 import { openViewer } from "./viewer.js";
-import { replay } from "../../replay/src/index.js";
+import {
+  replayWithReport,
+  reportSummary,
+  repairArtifact,
+  safeText,
+} from "../../replay/src/index.js";
+import { promptRepair } from "./repair.js";
 const help = `TraceCase — a bug is a runnable artifact.
   record <url> --out <file> [--title <title>]
   open <file> [--no-browser]
   inspect <file>
-  run <file> [--url <base-url>] [--headed]
+  run <file> [--url <base-url>] [--headed] [--report <file>] [--json]
+  run <file> --repair [--save-repaired <new-file>] [--timeout-ms <ms>]
   verify <file> [--url <base-url>]
 Record opens Chromium. Reproduce the bug, then press Enter in this terminal.
 V0 captures top-frame click/fill/select actions. No account or backend required.`;
 async function main() {
   const [command, arg, ...args] = process.argv.slice(2);
+  if (command === "--version") {
+    const { version } = JSON.parse(
+      await readFile(new URL("../../../package.json", import.meta.url), "utf8"),
+    );
+    console.log(version);
+    return;
+  }
   if (!command || command === "--help") {
     console.log(help);
     return;
@@ -30,9 +43,18 @@ async function main() {
   for (let i = 0; i < args.length; i++) {
     const flag = args[i];
     if (flag === "--headed") opts.headed = true;
+    else if (flag === "--repair") opts.repair = true;
+    else if (flag === "--json") opts.json = true;
     else if (flag === "--no-browser") opts.noBrowser = true;
     else if (
-      ["--url", "--out", "--title"].includes(flag) &&
+      [
+        "--url",
+        "--out",
+        "--title",
+        "--report",
+        "--save-repaired",
+        "--timeout-ms",
+      ].includes(flag) &&
       args[i + 1] &&
       !args[i + 1].startsWith("--")
     )
@@ -110,13 +132,48 @@ async function main() {
   }
   if (command === "verify" && !artifact.failure)
     throw new Error("verify requires recorded expected behavior");
-  console.log(
-    await replay(artifact, {
-      url: typeof opts.url === "string" ? opts.url : undefined,
-      headed: opts.headed === true,
-      verify: command === "verify",
-    }),
-  );
+  if (opts.repair && !process.stdin.isTTY)
+    throw new Error("--repair requires an interactive terminal");
+  if (opts["save-repaired"] && !opts.repair)
+    throw new Error("--save-repaired requires --repair");
+  if (opts["save-repaired"] && typeof opts["save-repaired"] !== "string")
+    throw new Error("Provide a new artifact path");
+  const report = await replayWithReport(artifact, {
+    url: typeof opts.url === "string" ? opts.url : undefined,
+    headed: opts.headed === true || opts.repair === true,
+    verify: command === "verify",
+    timeoutMs:
+      typeof opts["timeout-ms"] === "string"
+        ? Number(opts["timeout-ms"])
+        : undefined,
+    repair: opts.repair ? promptRepair : undefined,
+    onStep: opts.json
+      ? undefined
+      : (step) =>
+          console.log(
+            `${step.step}. ${step.action} ${step.status.toUpperCase()}${step.repaired ? " (repaired)" : step.selected ? " · " + safeText(JSON.stringify(step.selected)) : ""}`,
+          ),
+  });
+  if (typeof opts.report === "string")
+    await writeFile(opts.report, JSON.stringify(report, null, 2) + "\n", {
+      flag: "wx",
+    });
+  if (typeof opts["save-repaired"] === "string" && report.repairs.length) {
+    await writeFile(
+      opts["save-repaired"],
+      await packArtifact(repairArtifact(artifact, report.repairs)),
+      { flag: "wx" },
+    );
+  }
+  if (opts.json) console.log(JSON.stringify(report, null, 2));
+  else {
+    for (const entry of report.console)
+      console.error(`[${entry.level}] ${entry.message}`);
+    if (report.message) console.error(report.message);
+    console.log(reportSummary(report));
+  }
+  if (["diverged", "assertion-failed", "error"].includes(report.status))
+    process.exitCode = 1;
 }
 main().catch((error) => {
   console.error(error instanceof Error ? error.message : "TraceCase failed");

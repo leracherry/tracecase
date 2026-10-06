@@ -214,6 +214,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
     >
       <header>
         <a className="brand" href="#">
+          <img src="/tracecase-logo.png" width="32" height="32" alt="" />
           TRACECASE
         </a>
         <span className="local">● Local inspection · no upload</span>

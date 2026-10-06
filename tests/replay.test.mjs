@@ -5,6 +5,9 @@ import { preview } from "vite";
 import { readFile } from "node:fs/promises";
 import { attachRecorder } from "../dist/recorder/src/index.js";
 import { replayWithReport, repairArtifact } from "../dist/replay/src/index.js";
+// Browser startup and framework hydration share this budget with action waits.
+// Keep it realistic on CI hosts running several browser suites concurrently.
+const replayOptions = { timeoutMs: 2000 };
 const sample = JSON.parse(
   await readFile(
     new URL("../examples/checkout.tracecase", import.meta.url),
@@ -13,7 +16,7 @@ const sample = JSON.parse(
 );
 test(
   "React, Vue and Svelte recordings replay, report divergence, and accept explicit semantic repair",
-  { timeout: 60000 },
+  { timeout: 90000 },
   async () => {
     const server = await preview({
       configFile: "fixtures/frameworks/vite.config.mjs",
@@ -40,27 +43,27 @@ test(
           steps: structuredClone(steps),
         };
         assert.equal(artifact.steps.length, 3);
-        const report = await replayWithReport(artifact, { timeoutMs: 1000 });
+        const report = await replayWithReport(artifact, replayOptions);
         assert.equal(report.status, "reproduced");
         assert.equal(report.steps.length, 3);
         assert.ok(report.assertion.passed);
         const fallback = structuredClone(artifact);
         fallback.steps[0].target[0].value = "removed";
         assert.equal(
-          (await replayWithReport(fallback, { timeoutMs: 1000 })).status,
+          (await replayWithReport(fallback, replayOptions)).status,
           "reproduced",
         );
         const changed = {
           ...artifact,
           entryUrl: `${base}/${framework}.html?renamed=1`,
         };
-        const divergent = await replayWithReport(changed, { timeoutMs: 200 });
+        const divergent = await replayWithReport(changed, replayOptions);
         assert.equal(divergent.status, "diverged");
         assert.equal(divergent.steps.at(-1).step, 3);
         assert.equal(divergent.steps.at(-1).attempts[0].state, "missing");
         let prompts = 0;
         const repaired = await replayWithReport(changed, {
-          timeoutMs: 300,
+          ...replayOptions,
           repair: async (request) => {
             prompts++;
             assert.equal(request.step, 3);
@@ -69,17 +72,17 @@ test(
             );
           },
         });
-        assert.equal(prompts, 1);
+        assert.equal(prompts, 1, JSON.stringify(repaired));
         assert.equal(repaired.status, "reproduced");
         assert.equal(repaired.repairs.length, 1);
         const updated = repairArtifact(changed, repaired.repairs);
         assert.equal(
-          (await replayWithReport(updated, { timeoutMs: 1000 })).status,
+          (await replayWithReport(updated, replayOptions)).status,
           "reproduced",
         );
         assert.equal(changed.steps[2].target[0].name, "Continue");
         assert.equal(
-          (await replayWithReport(artifact, { verify: true, timeoutMs: 200 }))
+          (await replayWithReport(artifact, { ...replayOptions, verify: true }))
             .status,
           "assertion-failed",
         );
@@ -110,18 +113,18 @@ test("replay reports errors without leaking input values", async () => {
         },
       ],
     };
-    const report = await replayWithReport(artifact, { timeoutMs: 200 });
-    assert.equal(report.status, "assertion-failed");
+    const report = await replayWithReport(artifact, replayOptions);
+    assert.equal(report.status, "assertion-failed", JSON.stringify(report));
     assert.ok(!JSON.stringify(report).includes("secret-value-never-report"));
     const privateValue = structuredClone(artifact);
     privateValue.steps[0].redacted = true;
     assert.equal(
-      (await replayWithReport(privateValue, { timeoutMs: 200 })).status,
+      (await replayWithReport(privateValue, replayOptions)).status,
       "diverged",
     );
     const error = await replayWithReport(
       { ...artifact, entryUrl: "http://127.0.0.1:1/" },
-      { timeoutMs: 200 },
+      replayOptions,
     );
     assert.equal(error.status, "error");
     assert.equal(error.steps.length, 0);

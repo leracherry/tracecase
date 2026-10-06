@@ -8,6 +8,8 @@ First release candidate for the local capture → inspect → replay workflow.
 - Local React viewer with timeline search, evidence inspection and privacy review.
 - CLI capture, inspect, open, run and verify commands.
 - Structured replay reports, per-step locator diagnostics, explicit interactive locator repair and saved repaired copies.
+- Recorded API replay, body/occurrence matching, explicit live exceptions and coverage/mismatch inspection.
+- Shared teal/mint styling, neutral surfaces, native typography and responsive layouts.
 - Tested checkout scenarios built with React, Vue and Svelte.
 - TraceCase logo and documented permissions, artifact format and privacy limits.
 
@@ -22,4 +24,4 @@ Requires Node.js 22.12+ and Playwright Chromium. Run `npx playwright install chr
 
 ## Alpha limits
 
-Executable replay uses live networking and can change target application state. Deterministic fixtures and test generation are not included yet. Capture is Chromium/top-frame only. Visual fidelity can differ because remote assets are blocked. Redaction cannot identify every secret; review before sharing. Installation is manual; this release does not publish to npm or the Chrome Web Store.
+Live replay and explicit live API exceptions can change target application state. Recorded mode supports captured JSON/form API responses; static frontend resources remain live. Authentication state, WebSockets, response timing and Playwright test generation are not included. Capture is Chromium/top-frame only. Visual fidelity can differ because remote assets are blocked. Redaction cannot identify every secret; review before sharing. Installation is manual; this release does not publish to npm or the Chrome Web Store.

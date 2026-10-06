@@ -11,6 +11,7 @@ import {
   type Artifact,
 } from "../../../packages/schema/src/index.js";
 import { sanitizeVisual } from "./sanitize";
+import { NetworkReplay } from "./NetworkReplay";
 import "rrweb/dist/style.css";
 import "./style.css";
 type TimelineRow = {
@@ -215,9 +216,9 @@ export function Inspector({ initial }: { initial?: Artifact }) {
       <header>
         <a className="brand" href="#">
           <img src="/tracecase-logo.png" width="32" height="32" alt="" />
-          TRACECASE
+          TraceCase
         </a>
-        <span className="local">● Local inspection · no upload</span>
+        <span className="local">Local inspection · no upload</span>
         <label className="button">
           Open artifact
           <input
@@ -241,7 +242,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
           <h1>
             See what failed.
             <br />
-            Keep the evidence.
+            Replay the evidence.
           </h1>
           <p>
             Drop a .tracecase file here to inspect its actions, replay, console,
@@ -317,6 +318,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
                         : "") +
                       (selected === row ? " selected" : "")
                     }
+                    aria-pressed={selected === row}
                     onClick={() => choose(row)}
                   >
                     <time>{(row.time / 1000).toFixed(2)}s</time>
@@ -380,6 +382,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
               </details>
             </aside>
           </section>
+          <NetworkReplay artifact={artifact} />
           <section className="review">
             <div>
               <p className="eyebrow">FAILURE & PRIVACY REVIEW</p>
@@ -440,7 +443,11 @@ export function Inspector({ initial }: { initial?: Artifact }) {
                 />{" "}
                 I reviewed the evidence for sensitive content.
               </label>
-              <button disabled={!reviewed} onClick={() => void download()}>
+              <button
+                className="primary"
+                disabled={!reviewed}
+                onClick={() => void download()}
+              >
                 Export reviewed artifact
               </button>
               <p className="hint">

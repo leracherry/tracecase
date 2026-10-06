@@ -7,7 +7,7 @@ import { resolve, join } from "node:path";
 import { createDemoServer } from "../fixtures/demo-store/server.mjs";
 import { artifactSchema } from "../dist/schema/src/index.js";
 import { packArtifact, unpackArtifact } from "../dist/artifact/src/index.js";
-import { replay } from "../dist/replay/src/index.js";
+import { replay, replayWithReport } from "../dist/replay/src/index.js";
 const built = resolve("apps/extension/.output/chrome-mv3");
 async function launchExtension(enhanced) {
   const directory = await mkdtemp(join(tmpdir(), "tracecase-e2e-"));
@@ -231,6 +231,33 @@ for (const enhanced of [false, true])
         );
         assert.equal(exported.evidence.privacy.reviewed, true);
         assert.equal(await replay(exported, { url }), "FAILURE REPRODUCED");
+        if (enhanced) {
+          const fixedServer = createDemoServer({ isFixed: () => true });
+          await new Promise((resolve) =>
+            fixedServer.listen(0, "127.0.0.1", resolve),
+          );
+          try {
+            const changedUrl = `http://127.0.0.1:${fixedServer.address().port}`;
+            assert.equal(
+              (
+                await replayWithReport(exported, {
+                  url: changedUrl,
+                  timeoutMs: 500,
+                })
+              ).status,
+              "assertion-failed",
+            );
+            const historical = await replayWithReport(exported, {
+              url: changedUrl,
+              network: "recorded",
+            });
+            assert.equal(historical.status, "reproduced");
+            assert.equal(historical.coverage.matched, 1);
+            assert.equal(historical.coverage.aborted, 0);
+          } finally {
+            await new Promise((resolve) => fixedServer.close(resolve));
+          }
+        }
         await review.screenshot({
           path: join(
             tmpdir(),

@@ -106,7 +106,7 @@ export default defineContentScript({
       overlay = document.createElement("div");
       overlay.dataset.tracecaseIgnore = "";
       overlay.style.cssText =
-        "position:fixed;bottom:20px;right:20px;z-index:2147483647;background:#12304D;color:white;padding:12px;border-radius:8px;font:14px system-ui;display:flex;gap:12px;box-shadow:0 4px 24px #0004;";
+        "position:fixed;bottom:20px;right:20px;z-index:2147483647;background:#0d252b;color:#49dcbc;padding:12px;border-radius:12px;font:14px system-ui;display:flex;gap:12px;box-shadow:0 4px 24px #0004;";
       const label = document.createElement("span");
       label.textContent = "● Recording";
       overlay.append(label);
@@ -116,7 +116,8 @@ export default defineContentScript({
       ]) {
         const button = document.createElement("button");
         button.textContent = name || "";
-        button.style.cssText = "font:inherit;cursor:pointer;padding:5px 8px";
+        button.style.cssText =
+          "font:inherit;cursor:pointer;padding:6px 10px;border:1px solid #49dcbc55;border-radius:8px;background:#163940;color:#49dcbc";
         button.onclick = async () => {
           if (type === "stop") {
             await stop();

@@ -68,12 +68,9 @@ export function redactBody(
     }
   }
   if (/application\/x-www-form-urlencoded/i.test(contentType)) {
-    const params = new URLSearchParams(body);
-    for (const key of [...params.keys()])
-      params.set(
-        key,
-        sensitiveKey(key) ? "[REDACTED]" : redactText(params.get(key) || ""),
-      );
+    const params = new URLSearchParams();
+    for (const [key, value] of new URLSearchParams(body))
+      params.append(key, sensitiveKey(key) ? "[REDACTED]" : redactText(value));
     return params.toString();
   }
   // Free-form response text is omitted: key-based redaction cannot safely cover it.

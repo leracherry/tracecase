@@ -28,13 +28,20 @@ Structured JSON replay reports, per-step progress and locator diagnostics, bound
 
 Actions are not retried after they start. Repairs require an explicit selection, and reports distinguish action divergence from failed outcome assertions. Broader real-world application validation remains a release-quality gate.
 
+## Milestone 5 — deterministic API replay implemented
+
+Recorded fetch/XHR responses, normalized URL/media-type/body-hash matching, per-signature occurrence order, explicit live exceptions, blocked mismatch handling, structured coverage reports and viewer report inspection. Enhanced extension capture is tested against a changed backend: live replay no longer reproduces the historical failure, while recorded replay does.
+
+Scope: captured JSON/form responses and bodyless HEAD/204/205 responses. Static frontend assets stay live; service workers are blocked. Redacted/omitted evidence, authentication, WebSockets and timing emulation remain limitations.
+
+The interface now uses shared teal/mint tokens, neutral surfaces, native typography, keyboard focus and responsive evidence/report panels, guided by OpenAI’s public UI guidelines.
+
 ## Release preparation
 
 Shared prerelease version, teal-squircle and mint-dot logo, version validation, Node 22/24 CI, packaged CLI/extension/viewer assets, checksum generation, clean-install smoke testing, and a tag-triggered draft-release workflow. npm and Chrome Web Store publication are separate future distribution steps.
 
 ## Next milestones
 
-5. Deterministic API fixtures, occurrence/body matching, divergence controls and coverage reports.
 6. Playwright test export using expected behavior and optional fixtures.
 7. Agent context export, MCP, issue Markdown and CI artifact verification.
 8. Public specification/plugin ecosystem and cross-browser research.

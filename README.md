@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/leracherry/tracecase/actions/workflows/ci.yml/badge.svg)](https://github.com/leracherry/tracecase/actions/workflows/ci.yml)
 [![Release](https://github.com/leracherry/tracecase/actions/workflows/release.yml/badge.svg)](https://github.com/leracherry/tracecase/actions/workflows/release.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-0155AB.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-0D252B.svg)](LICENSE)
 
 **0.1.0-alpha.1 is being prepared.** Source builds are available now; release bundles are produced by GitHub Actions. This is an experimental Chromium developer tool.
 
@@ -67,7 +67,7 @@ npm run tracecase -- verify recording.tracecase --url http://127.0.0.1:5173
 # VERIFIED
 ```
 
-`run` checks observed failure text when present. `verify` checks the expected outcome. Failed actions/assertions return a nonzero status. Without a marker, `run` reports only completed actions. Networking during executable replay is currently **live**.
+`run` checks observed failure text when present. `verify` checks the expected outcome. Failed actions/assertions return a nonzero status. Without a marker, `run` reports only completed actions. Networking defaults to **live**; use recorded mode to serve captured API responses.
 
 The original interactive Playwright recorder remains available:
 
@@ -84,6 +84,27 @@ npm run tracecase -- verify recording.tracecase --url http://127.0.0.1:5173 --js
 ```
 
 Reports distinguish missing/ambiguous locators, action divergence and failed assertions. Repair opens a visible browser and asks you to choose a semantic replacement; the original recording remains unchanged. See [replay behavior and report statuses](docs/REPLAY.md).
+
+## Replay recorded API responses
+
+```sh
+npm run tracecase -- run recording.tracecase --url http://localhost:5173 --network recorded --report replay.json
+```
+
+Enhanced capture stores reviewed API responses in the artifact. Recorded replay matches URL, request body and occurrence; unmatched API requests are blocked. Use `--passthrough '*/analytics/*'` for specific live traffic, or `--unmatched live` for a hybrid run. The viewer opens replay reports to show actual coverage and mismatch reasons. Static frontend resources remain live.
+
+The synthetic [recorded checkout example](examples/checkout-recorded.tracecase) reproduces the historical tax failure even with a fixed backend:
+
+```sh
+TRACECASE_DEMO_FIXED=1 npm run demo
+# In another terminal:
+npm run tracecase -- run examples/checkout-recorded.tracecase --url http://127.0.0.1:5173 --network recorded --report historical.json
+# FAILURE REPRODUCED
+npm run tracecase -- verify examples/checkout-recorded.tracecase --url http://127.0.0.1:5173
+# VERIFIED (live backend)
+```
+
+See [recorded API replay](docs/NETWORK_REPLAY.md) for supported bodies, redaction and matching rules.
 
 ## Release packages
 
@@ -107,19 +128,21 @@ npm test
 npm run schema
 ```
 
-Tests build the production extension/viewer, replay 20 captured checkout variations, exercise real MV3 standard/enhanced capture through navigation, export files and replay them, verify privacy and size limits, inspect malicious artifacts in the local viewer, and validate advanced replay/repair against actual React, Vue and Svelte fixtures. Enhanced-mode browser tests pregrant the optional debugger permission in a temporary test manifest; the shipped extension requests it interactively.
+Tests build the production extension/viewer, replay 20 captured checkout variations, exercise real MV3 standard/enhanced capture through navigation, export files and replay them, verify privacy and size limits, inspect malicious artifacts in the local viewer, validate advanced replay/repair against actual React, Vue and Svelte fixtures, reproduce captured failures against a changed backend with recorded APIs, and inspect reports on desktop/mobile. Enhanced-mode browser tests pregrant the optional debugger permission in a temporary test manifest; the shipped extension requests it interactively.
 
-| Area               | Responsibility                                                   |
-| ------------------ | ---------------------------------------------------------------- |
-| apps/extension     | WXT Manifest V3 popup, overlay, persistent capture, review       |
-| apps/viewer        | React/Vite inspector, timeline and sandboxed rrweb visual replay |
-| packages/schema    | Runtime validation and published JSON Schema                     |
-| packages/artifact  | Bounded ZIP packaging, integrity checks, legacy JSON support     |
-| packages/capture   | Semantic click/fill/select/key and navigation capture            |
-| packages/redaction | Private fields, credentials, JSON/form fields, URL redaction     |
-| packages/recorder  | Original Playwright recorder                                     |
-| packages/replay    | Executable playback, locator fallback, failure verification      |
-| packages/cli       | Record, open, inspect, run, verify                               |
+| Area                      | Responsibility                                                   |
+| ------------------------- | ---------------------------------------------------------------- |
+| apps/extension            | WXT Manifest V3 popup, overlay, persistent capture, review       |
+| apps/viewer               | React/Vite inspector, timeline and sandboxed rrweb visual replay |
+| packages/schema           | Runtime validation and published JSON Schema                     |
+| packages/artifact         | Bounded ZIP packaging, integrity checks, legacy JSON support     |
+| packages/capture          | Semantic click/fill/select/key and navigation capture            |
+| packages/redaction        | Private fields, credentials, JSON/form fields, URL redaction     |
+| packages/recorder         | Original Playwright recorder                                     |
+| packages/network-fixtures | Captured API response matching, routing and coverage             |
+| packages/ui               | Shared teal/mint interface tokens                                |
+| packages/replay           | Executable playback, locator fallback, failure verification      |
+| packages/cli              | Record, open, inspect, run, verify                               |
 
 ## Supported scope
 
@@ -129,4 +152,4 @@ Enhanced mode captures fetch/XHR request metadata, response status/timing, and b
 
 Automatic redaction is conservative but cannot identify every secret in arbitrary text. Use local/staging environments and review recordings before sharing. See [security](SECURITY.md), [permissions](docs/PERMISSIONS.md), [format](docs/TRACECASE_FORMAT.md), and [roadmap](docs/ROADMAP.md).
 
-MIT licensed. See [contributing](CONTRIBUTING.md) and the [brand guide](docs/BRAND.md).
+MIT licensed. See [contributing](CONTRIBUTING.md) the [brand guide](docs/BRAND.md), and [interface design](docs/DESIGN.md).

@@ -30,6 +30,7 @@ for (const name of [
   "LICENSE",
   "docs/REDACTION.md",
   "docs/REPLAY.md",
+  "docs/NETWORK_REPLAY.md",
   "docs/TRACECASE_FORMAT.md",
 ])
   await cp(name, join(stage, name), { recursive: true });
@@ -172,7 +173,8 @@ await writeFile(
       node: process.version,
       artifacts: [tarball, extension, viewer],
       artifactFormat: ["0.1", "0.2"],
-      networkReplay: "live",
+      networkReplay: ["live", "recorded"],
+      replayReportVersion: "1.1",
     },
     null,
     2,

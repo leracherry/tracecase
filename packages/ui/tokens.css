@@ -1,0 +1,100 @@
+:root {
+  color-scheme: light;
+  --brand-ink: #0d252b;
+  --brand-mint: #49dcbc;
+  --brand-hover: #163940;
+  --surface: #ffffff;
+  --canvas: #fafafa;
+  --subtle: #f3f5f4;
+  --selected: #e6f7f2;
+  --border: #dedfe0;
+  --text: #202123;
+  --muted: #5f6368;
+  --positive: #176b56;
+  --danger: #a12b26;
+  --danger-surface: #fff2f0;
+  --warning: #80551e;
+  --warning-surface: #fff8e9;
+  --focus: #177b66;
+  --radius: 12px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--text);
+  font: 14px/1.5 var(--font);
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button,
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+}
+button:hover,
+.button:hover {
+  background: var(--subtle);
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+button[hidden] {
+  display: none;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+.button:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+input,
+select {
+  accent-color: var(--positive);
+}
+input:not([type="checkbox"]):not([type="file"]),
+select {
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+}
+.primary {
+  background: var(--brand-ink);
+  color: var(--brand-mint);
+  border-color: var(--brand-ink);
+}
+.primary:hover {
+  background: var(--brand-hover);
+}
+code,
+pre {
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+.muted,
+.hint {
+  color: var(--muted);
+}

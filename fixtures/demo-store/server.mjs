@@ -1,6 +1,8 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
-export function createDemoServer() {
+export function createDemoServer({
+  isFixed = () => process.env.TRACECASE_DEMO_FIXED === "1",
+} = {}) {
   return createServer(async (req, res) => {
     if (req.url === "/api/privacy") {
       res.writeHead(200, {
@@ -25,8 +27,7 @@ export function createDemoServer() {
       const country = new URL(req.url, "http://localhost").searchParams.get(
         "country",
       );
-      const broken =
-        country === "CA" && process.env.TRACECASE_DEMO_FIXED !== "1";
+      const broken = country === "CA" && !isFixed();
       res.writeHead(broken ? 500 : 200, { "content-type": "application/json" });
       res.end(
         JSON.stringify(

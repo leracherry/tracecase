@@ -1,4 +1,11 @@
 import { chromium, type Page, type Locator } from "playwright";
+import { createHash } from "node:crypto";
+import {
+  installNetworkReplay,
+  validateNetworkOptions,
+  type NetworkOptions,
+  type NetworkCoverage,
+} from "../../network-fixtures/src/index.js";
 import {
   artifactSchema,
   locatorSchema,
@@ -26,18 +33,21 @@ export type StepResult = {
 export type Repair = { step: number; candidate: Candidate };
 export type ReplayReport = {
   format: "tracecase-replay-report";
-  version: "1.0";
+  version: "1.1";
+  artifactSha256: string;
   title: string;
   startedAt: string;
   durationMs: number;
   targetUrl: string;
-  network: "live";
+  network: "live" | "recorded";
+  coverage?: NetworkCoverage;
   mode: "reproduce" | "verify";
   status:
     | "completed"
     | "reproduced"
     | "verified"
     | "diverged"
+    | "network-diverged"
     | "assertion-failed"
     | "error";
   steps: StepResult[];
@@ -52,7 +62,7 @@ export type RepairRequest = {
   attempts: Attempt[];
   suggestions: Candidate[];
 };
-export type ReplayOptions = {
+export type ReplayOptions = NetworkOptions & {
   url?: string;
   headed?: boolean;
   verify?: boolean;
@@ -293,17 +303,21 @@ export async function replayWithReport(
   options: ReplayOptions = {},
 ): Promise<ReplayReport> {
   const artifact = artifactSchema.parse(input);
+  validateNetworkOptions(options);
   const wait = timeout(options);
   const started = Date.now();
   const destination = targetUrl(artifact.entryUrl, options.url);
   const report: ReplayReport = {
     format: "tracecase-replay-report",
-    version: "1.0",
+    version: "1.1",
+    artifactSha256: createHash("sha256")
+      .update(JSON.stringify(artifact))
+      .digest("hex"),
     title: safeText(artifact.title),
     startedAt: new Date(started).toISOString(),
     durationMs: 0,
     targetUrl: redactUrl(destination),
-    network: "live",
+    network: options.network || "live",
     mode: options.verify ? "verify" : "reproduce",
     status: "error",
     steps: [],
@@ -315,7 +329,18 @@ export async function replayWithReport(
     if (options.verify && !artifact.failure)
       throw new Error("verify requires recorded expected behavior");
     browser = await chromium.launch({ headless: !options.headed });
-    const page = await browser.newPage({ viewport: artifact.viewport });
+    const context = await browser.newContext({
+      viewport: artifact.viewport,
+      serviceWorkers: options.network === "recorded" ? "block" : "allow",
+    });
+    if (options.network === "recorded")
+      report.coverage = await installNetworkReplay(
+        context,
+        artifact,
+        destination,
+        options,
+      );
+    const page = await context.newPage();
     const recordConsole = (level: "error" | "warning", message: string) => {
       if (report.console.length < 200)
         report.console.push({
@@ -358,6 +383,12 @@ export async function replayWithReport(
           "Actions completed, but the selected failure/expected-outcome text was not uniquely visible";
       }
     } else report.status = "completed";
+    if (options.network === "recorded") {
+      // Observe late requests from the completed interaction, with a bounded quiet period.
+      await page
+        .waitForLoadState("networkidle", { timeout: Math.min(wait, 2000) })
+        .catch(() => {});
+    }
   } catch (error) {
     report.status = error instanceof ReplayDivergence ? "diverged" : "error";
     report.message =
@@ -368,6 +399,14 @@ export async function replayWithReport(
       report.message = "verify requires recorded expected behavior";
   } finally {
     await browser?.close();
+    if (
+      report.coverage &&
+      (report.coverage.aborted || report.coverage.errors)
+    ) {
+      report.status = "network-diverged";
+      report.message =
+        "Recorded API replay encountered blocked requests or routing errors. Inspect network coverage or configure explicit live exceptions.";
+    }
     report.durationMs = Date.now() - started;
   }
   return report;
@@ -398,13 +437,18 @@ export function reportSummary(report: ReplayReport): string {
     verified: "VERIFIED",
     diverged: "REPLAY DIVERGED",
     "assertion-failed": "ASSERTION FAILED",
+    "network-diverged": "NETWORK DIVERGED",
     error: "REPLAY ERROR",
   }[report.status];
 }
 /** Compatibility API for existing consumers. Detailed callers should use replayWithReport. */
 export async function replay(artifact: Artifact, options: ReplayOptions = {}) {
   const report = await replayWithReport(artifact, options);
-  if (["diverged", "assertion-failed", "error"].includes(report.status))
+  if (
+    ["diverged", "network-diverged", "assertion-failed", "error"].includes(
+      report.status,
+    )
+  )
     throw new Error(report.message || reportSummary(report));
   return reportSummary(report);
 }

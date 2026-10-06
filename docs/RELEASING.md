@@ -6,7 +6,7 @@ The prepared version is `0.1.0-alpha.1`. Releases are GitHub draft releases, wit
 
 Pushes to `main`, pull requests, and the reusable workflow run on pinned Ubuntu 24.04 with Node 22 and 24. Each job installs locked dependencies and Chromium, validates versions, type-checks, builds the extension/viewer/framework fixtures, runs browser tests, and checks the generated schema.
 
-The Node 22 job also builds release archives and installs the CLI tarball into a clean temporary project. The smoke test runs its CLI, reproduces the demo, writes a report, opens its bundled viewer, and validates archive entrypoints/checksums. CI uploads the tested `release-bundle` artifact for 14 days.
+The Node 22 job also builds release archives and installs the CLI tarball into a clean temporary project. The smoke test runs its CLI, reproduces the demo with live and recorded APIs, writes reports, opens its bundled viewer, and validates archive entrypoints/checksums. CI uploads the tested `release-bundle` artifact for 14 days.
 
 ## Rehearse without releasing
 

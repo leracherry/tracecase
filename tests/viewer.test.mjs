@@ -4,6 +4,8 @@ import { chromium } from "playwright";
 import { mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { createHash } from "node:crypto";
+import { artifactSchema } from "../dist/schema/src/index.js";
 import { spawn } from "node:child_process";
 import { packArtifact, unpackArtifact } from "../dist/artifact/src/index.js";
 const sample = JSON.parse(
@@ -171,6 +173,96 @@ test(
           "request-1",
         ),
       );
+      const coverageReport = {
+        format: "tracecase-replay-report",
+        version: "1.1",
+        artifactSha256: createHash("sha256")
+          .update(JSON.stringify(artifactSchema.parse(artifact)))
+          .digest("hex"),
+        title: artifact.title,
+        status: "network-diverged",
+        network: "recorded",
+        coverage: {
+          policy: "abort",
+          totalFixtures: 1,
+          eligibleFixtures: 0,
+          usedFixtures: 0,
+          unusedFixtures: 0,
+          requests: 1,
+          matched: 0,
+          passedThrough: 0,
+          unmatched: 1,
+          aborted: 1,
+          errors: 0,
+          truncated: false,
+          unused: [],
+          unavailable: [
+            {
+              index: 0,
+              method: "GET",
+              url: "https://demo.test/api/tax",
+              reason: "Unsupported response body type",
+            },
+          ],
+          entries: [
+            {
+              method: "GET",
+              url: "https://demo.test/api/tax",
+              occurrence: 1,
+              outcome: "aborted",
+              reason: "<img src=x onerror=alert(1)>",
+            },
+          ],
+        },
+      };
+      await page.getByLabel("Open replay report").setInputFiles({
+        name: "replay.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(coverageReport)),
+      });
+      await page.getByText("Network mismatch", { exact: true }).waitFor();
+      assert.ok(
+        (await page.locator(".network-replay").textContent()).includes(
+          "1 blocked",
+        ),
+      );
+      assert.equal(await page.locator(".network-replay img").count(), 0);
+      await page.screenshot({
+        path: join(tmpdir(), "tracecase-brand-desktop.png"),
+        fullPage: true,
+      });
+      await page.setViewportSize({ width: 390, height: 844 });
+      assert.ok(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      );
+      await page.screenshot({
+        path: join(tmpdir(), "tracecase-brand-mobile.png"),
+        fullPage: true,
+      });
+      await page.setViewportSize({ width: 1280, height: 720 });
+      await page.getByLabel("Open replay report").setInputFiles({
+        name: "wrong.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(
+          JSON.stringify({
+            ...coverageReport,
+            artifactSha256: "0".repeat(64),
+          }),
+        ),
+      });
+      await page.getByRole("alert").waitFor();
+      assert.equal(
+        await page.getByText("Network mismatch", { exact: true }).count(),
+        0,
+      );
+      await page.getByLabel("Open replay report").setInputFiles({
+        name: "replay.json",
+        mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify(coverageReport)),
+      });
+      await page.getByText("Network mismatch", { exact: true }).waitFor();
       await page.getByLabel("Filter timeline").selectOption("all");
       await page.getByLabel("Search timeline").fill("Captured console");
       assert.equal(await page.locator(".row").count(), 1);

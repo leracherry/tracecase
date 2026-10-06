@@ -23,6 +23,7 @@ const help = `TraceCase — a bug is a runnable artifact.
   inspect <file>
   run <file> [--url <base-url>] [--headed] [--report <file>] [--json]
   run <file> --repair [--save-repaired <new-file>] [--timeout-ms <ms>]
+  run <file> --network recorded [--unmatched abort|live] [--passthrough <URL-glob>]
   verify <file> [--url <base-url>]
 Record opens Chromium. Reproduce the bug, then press Enter in this terminal.
 V0 captures top-frame click/fill/select actions. No account or backend required.`;
@@ -39,6 +40,7 @@ async function main() {
     console.log(help);
     return;
   }
+  const passthrough: string[] = [];
   const opts: Record<string, string | boolean> = {};
   for (let i = 0; i < args.length; i++) {
     const flag = args[i];
@@ -47,6 +49,12 @@ async function main() {
     else if (flag === "--json") opts.json = true;
     else if (flag === "--no-browser") opts.noBrowser = true;
     else if (
+      flag === "--passthrough" &&
+      args[i + 1] &&
+      !args[i + 1].startsWith("--")
+    )
+      passthrough.push(args[++i]);
+    else if (
       [
         "--url",
         "--out",
@@ -54,6 +62,8 @@ async function main() {
         "--report",
         "--save-repaired",
         "--timeout-ms",
+        "--network",
+        "--unmatched",
       ].includes(flag) &&
       args[i + 1] &&
       !args[i + 1].startsWith("--")
@@ -138,7 +148,20 @@ async function main() {
     throw new Error("--save-repaired requires --repair");
   if (opts["save-repaired"] && typeof opts["save-repaired"] !== "string")
     throw new Error("Provide a new artifact path");
+  if (
+    opts.network !== undefined &&
+    !["live", "recorded"].includes(String(opts.network))
+  )
+    throw new Error("--network must be live or recorded");
+  if (
+    opts.unmatched !== undefined &&
+    !["abort", "live"].includes(String(opts.unmatched))
+  )
+    throw new Error("--unmatched must be abort or live");
   const report = await replayWithReport(artifact, {
+    network: opts.network as "live" | "recorded" | undefined,
+    unmatched: opts.unmatched as "abort" | "live" | undefined,
+    passthrough,
     url: typeof opts.url === "string" ? opts.url : undefined,
     headed: opts.headed === true || opts.repair === true,
     verify: command === "verify",
@@ -170,9 +193,17 @@ async function main() {
     for (const entry of report.console)
       console.error(`[${entry.level}] ${entry.message}`);
     if (report.message) console.error(report.message);
+    if (report.coverage)
+      console.log(
+        `API coverage: ${report.coverage.matched}/${report.coverage.requests} matched · ${report.coverage.passedThrough} live · ${report.coverage.aborted} blocked · ${report.coverage.unusedFixtures} unused fixtures`,
+      );
     console.log(reportSummary(report));
   }
-  if (["diverged", "assertion-failed", "error"].includes(report.status))
+  if (
+    ["diverged", "network-diverged", "assertion-failed", "error"].includes(
+      report.status,
+    )
+  )
     process.exitCode = 1;
 }
 main().catch((error) => {

@@ -6,7 +6,7 @@ The canonical asset is [tracecase-logo.png](assets/tracecase-logo.png), copied u
 
 It is used in the README, extension icon/popup, and viewer header/favicon. `npm run brand` copies the canonical asset into the application public directories before building; those copies are not separate sources of truth. Release packages include the built application assets.
 
-The interface accent color remains `#0155AB`; it does not recolor the logo.
+The interface uses dark teal `#0D252B` and mint `#49DCBC`, with neutral reading surfaces. Shared tokens and interaction guidance are documented in [interface design](DESIGN.md). The logo is not recolored.
 
 ## Asset provenance
 

@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
+import { packArtifact } from "../../dist/artifact/src/index.js";
 import { unzipSync } from "fflate";
 import { createDemoServer } from "../../fixtures/demo-store/server.mjs";
 const pkg = JSON.parse(await readFile("package.json", "utf8"));
@@ -34,7 +35,8 @@ for (const kind of ["chrome", "viewer"]) {
     throw new Error("Unsafe release path");
 }
 const directory = await mkdtemp(join(tmpdir(), "tracecase-release-"));
-const server = createDemoServer();
+let fixed = false;
+const server = createDemoServer({ isFixed: () => fixed });
 await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
 const url = `http://127.0.0.1:${server.address().port}`;
 try {
@@ -75,6 +77,81 @@ try {
   });
   if (JSON.parse(await readFile(report, "utf8")).status !== "reproduced")
     throw new Error("Packaged replay did not reproduce demo");
+  const sample = JSON.parse(await readFile(artifact, "utf8"));
+  const recorded = {
+    ...sample,
+    version: "0.2",
+    evidence: {
+      environment: {
+        userAgent: "test",
+        platform: "test",
+        language: "en",
+        timezone: "UTC",
+      },
+      capabilities: {
+        visual: false,
+        console: false,
+        network: true,
+        bodies: true,
+        screenshots: false,
+        mode: "enhanced",
+        warnings: [],
+      },
+      events: [],
+      visual: [],
+      screenshots: [],
+      privacy: { redactions: 0, excludedInputs: 0, reviewed: true },
+      network: [
+        {
+          id: "tax",
+          time: 0,
+          method: "GET",
+          url: new URL("/api/tax?country=CA", sample.entryUrl).href,
+          requestHeaders: {},
+          responseHeaders: { "content-type": "application/json" },
+          status: 500,
+          duration: 0,
+          responseBody: '{"error":"Tax service unavailable"}',
+        },
+      ],
+    },
+  };
+  const recording = join(directory, "historical.tracecase"),
+    historicalReport = join(directory, "historical.json");
+  await writeFile(recording, await packArtifact(recorded));
+  fixed = true;
+  await new Promise((resolve, reject) => {
+    const child = spawn(
+      process.execPath,
+      [
+        cli,
+        "run",
+        recording,
+        "--url",
+        url,
+        "--network",
+        "recorded",
+        "--report",
+        historicalReport,
+      ],
+      { cwd: directory, stdio: "inherit" },
+    );
+    child.on("error", reject);
+    child.on("exit", (code) =>
+      code === 0
+        ? resolve()
+        : reject(new Error(`Packaged recorded replay exited ${code}`)),
+    );
+  });
+  const historical = JSON.parse(await readFile(historicalReport, "utf8"));
+  if (
+    historical.status !== "reproduced" ||
+    historical.coverage.matched !== 1 ||
+    historical.coverage.aborted
+  )
+    throw new Error(
+      "Packaged recorded replay did not reproduce historical failure",
+    );
   const child = spawn(
     process.execPath,
     [cli, "open", artifact, "--no-browser"],

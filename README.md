@@ -1,4 +1,4 @@
-<p align="center"><img src="docs/assets/tracecase-logo.png" width="150" alt="TraceCase T logo" /></p>
+<p align="center"><img src="docs/assets/tracecase-logo.png" width="150" alt="TraceCase teal squircle with mint dot logo" /></p>
 
 # TraceCase
 

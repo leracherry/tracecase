@@ -30,7 +30,7 @@ Actions are not retried after they start. Repairs require an explicit selection,
 
 ## Release preparation
 
-Shared prerelease version, T-mark branding in `#0155AB`, version validation, Node 22/24 CI, packaged CLI/extension/viewer assets, checksum generation, clean-install smoke testing, and a tag-triggered draft-release workflow. npm and Chrome Web Store publication are separate future distribution steps.
+Shared prerelease version, teal-squircle and mint-dot logo, version validation, Node 22/24 CI, packaged CLI/extension/viewer assets, checksum generation, clean-install smoke testing, and a tag-triggered draft-release workflow. npm and Chrome Web Store publication are separate future distribution steps.
 
 ## Next milestones
 

@@ -53,3 +53,7 @@ The suite covers recorded flows in actual React, Vue and Svelte checkout fixture
 ## Recorded networking
 
 Use `--network recorded` to serve captured API responses. Unmatched requests are blocked unless explicitly allowed live. Open the resulting report in the viewer to inspect coverage and mismatch reasons. See [recorded API replay](NETWORK_REPLAY.md) for matching, exceptions and supported scope.
+
+## Other browsers and adapters
+
+`--browser chromium|firefox|webkit` chooses the replay engine (Chromium by default). Install the selected Playwright browser first. Reports identify the engine and any explicit local plugins. Custom plugin routes may sit outside built-in network coverage. See [compatibility](BROWSER_COMPATIBILITY.md) and [plugins](PLUGINS.md).

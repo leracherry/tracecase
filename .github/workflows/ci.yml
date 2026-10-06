@@ -26,10 +26,23 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium firefox webkit
       - run: npm run release:check
       - run: npm run check
       - run: npm test
+        env:
+          TRACECASE_CROSS_BROWSER: "1"
+      - name: Start fixed demo for action validation
+        if: matrix.node == 22
+        run: TRACECASE_DEMO_FIXED=1 PORT=5199 node fixtures/demo-store/server.mjs > /tmp/tracecase-demo.log 2>&1 &
+      - uses: ./.github/actions/verify
+        if: matrix.node == 22
+        id: artifact-check
+        with:
+          artifact: examples/checkout-recorded.tracecase
+          base-url: http://127.0.0.1:5199
+          assertion: observed
+          network: recorded
       - run: npm run schema && git diff --exit-code -- docs/tracecase.schema.json
       - if: matrix.node == 22
         run: npm run release:pack

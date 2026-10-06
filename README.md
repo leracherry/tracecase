@@ -106,6 +106,20 @@ npm run tracecase -- verify examples/checkout-recorded.tracecase --url http://12
 
 See [recorded API replay](docs/NETWORK_REPLAY.md) for supported bodies, redaction and matching rules.
 
+## Turn the recording into a regression test
+
+```sh
+npm run tracecase -- test recording.tracecase --out tests/checkout.spec.ts --url http://localhost:5173
+npm run tracecase -- test recording.tracecase --out tests/historical.spec.ts --network recorded --assertion observed
+npm run tracecase -- context recording.tracecase --out context.json
+npm run tracecase -- issue recording.tracecase --out issue.md
+npm run tracecase -- mcp recording.tracecase
+```
+
+Tests assert expected behavior by default. Recorded mode exports a self-contained fixture bundle; the generated tests run with `@playwright/test` and do not require TraceCase. In the viewer, edit the failure pair, complete privacy review, and use **Export & handoff** to preview and download tests, issue drafts or agent context.
+
+See [test generation](docs/TEST_EXPORT.md), [MCP and CI workflows](docs/AGENT_WORKFLOWS.md), [plugin API](docs/PLUGINS.md), and the [documentation index](docs/README.md).
+
 ## Release packages
 
 The [Release workflow](https://github.com/leracherry/tracecase/actions/workflows/release.yml) builds and tests an installable CLI tarball, unpacked Chrome extension ZIP, and local viewer ZIP with checksums. Manual runs rehearse packaging; matching version tags create draft releases after all checks pass. Publishing remains an explicit maintainer step.
@@ -128,7 +142,7 @@ npm test
 npm run schema
 ```
 
-Tests build the production extension/viewer, replay 20 captured checkout variations, exercise real MV3 standard/enhanced capture through navigation, export files and replay them, verify privacy and size limits, inspect malicious artifacts in the local viewer, validate advanced replay/repair against actual React, Vue and Svelte fixtures, reproduce captured failures against a changed backend with recorded APIs, and inspect reports on desktop/mobile. Enhanced-mode browser tests pregrant the optional debugger permission in a temporary test manifest; the shipped extension requests it interactively.
+Tests build the production extension/viewer, replay 20 captured checkout variations, exercise real MV3 standard/enhanced capture through navigation, export files and replay them, verify privacy and size limits, inspect malicious artifacts in the local viewer, validate advanced replay/repair against actual React, Vue and Svelte fixtures, reproduce captured failures against a changed backend with recorded APIs, inspect reports and export handoffs on desktop/mobile, execute generated regression tests before/after a fix, and exercise MCP and plugins. CI also checks live/recorded replay in Chromium, Firefox and WebKit. Enhanced-mode browser tests pregrant the optional debugger permission in a temporary test manifest; the shipped extension requests it interactively.
 
 | Area                      | Responsibility                                                   |
 | ------------------------- | ---------------------------------------------------------------- |
@@ -143,6 +157,12 @@ Tests build the production extension/viewer, replay 20 captured checkout variati
 | packages/ui               | Shared teal/mint interface tokens                                |
 | packages/replay           | Executable playback, locator fallback, failure verification      |
 | packages/cli              | Record, open, inspect, run, verify                               |
+
+## Compatibility and extensibility
+
+Capture uses the Chromium extension. Executable replay also supports `--browser firefox` and `--browser webkit`; install those browsers with Playwright first. See the [tested compatibility matrix and capture research](docs/BROWSER_COMPATIBILITY.md).
+
+The [artifact specification](docs/spec/0.2.md) and [schema](docs/tracecase.schema.json) support third-party readers. Trusted local plugins can redact/enrich artifacts or adapt replay without editing the capture engine. Plugins are selected explicitly with `--plugin` and never loaded from recordings.
 
 ## Supported scope
 

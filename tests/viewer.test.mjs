@@ -284,6 +284,68 @@ test(
       assert.equal(exported.evidence.network.length, 0);
       assert.ok(!exported.evidence.events.some((e) => e.type === "console"));
       assert.ok(exported.evidence.events.some((e) => e.type === "marker"));
+      await page
+        .getByLabel("Expected behavior", { exact: true })
+        .fill("Updated expected behavior");
+      await page
+        .getByRole("button", { name: "Download Playwright test" })
+        .waitFor();
+      const testDownload = page.waitForEvent("download");
+      await page
+        .getByRole("button", { name: "Download Playwright test" })
+        .click();
+      const testFile = await testDownload;
+      assert.ok(
+        (await readFile(await testFile.path(), "utf8")).includes(
+          "Updated expected behavior",
+        ),
+      );
+      await page.getByLabel("Test networking").selectOption("recorded");
+      assert.equal(
+        await page
+          .getByRole("button", { name: "Download Playwright test" })
+          .isDisabled(),
+        true,
+      );
+      await page.getByLabel("Export format").selectOption("context");
+      const contextDownload = page.waitForEvent("download");
+      await page
+        .getByRole("button", { name: "Download agent context" })
+        .click();
+      const contextFile = await contextDownload;
+      const handoff = JSON.parse(
+        await readFile(await contextFile.path(), "utf8"),
+      );
+      assert.equal(handoff.counts.requests, 0);
+      assert.equal(handoff.errors.length, 0);
+      assert.equal(handoff.failure.expected, "Updated expected behavior");
+      await page.getByLabel("Export format").selectOption("issue");
+      const issueDownload = page.waitForEvent("download");
+      await page.getByRole("button", { name: "Download issue draft" }).click();
+      const issueFile = await issueDownload;
+      assert.ok(
+        (await readFile(await issueFile.path(), "utf8")).includes("&lt;img"),
+      );
+      await page.getByLabel("Export format").selectOption("test");
+      await page.getByLabel("Test networking").selectOption("live");
+      await page
+        .locator(".export-workbench")
+        .screenshot({ path: join(tmpdir(), "tracecase-export-panel.png") });
+      await page.screenshot({
+        path: join(tmpdir(), "tracecase-workbench-desktop.png"),
+        fullPage: true,
+      });
+      await page.setViewportSize({ width: 390, height: 844 });
+      assert.ok(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      );
+      await page.screenshot({
+        path: join(tmpdir(), "tracecase-workbench-mobile.png"),
+        fullPage: true,
+      });
+      await page.setViewportSize({ width: 1280, height: 720 });
       await page.getByLabel("Open artifact").setInputFiles({
         name: "bad.tracecase",
         mimeType: "application/zip",

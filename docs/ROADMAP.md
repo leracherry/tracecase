@@ -20,7 +20,7 @@ React/Vite local viewer, rrweb recording/replay, searchable/filterable correlate
 
 Explicit enhanced debugger capture, fetch/XHR metadata/status/timing, bounded JSON/form bodies, failed-request highlighting, credential/header/body redaction before persistence, size/count limits, capabilities/warnings, export privacy review and standard fallback. Tested with actual Chromium extension sessions in both modes, credential-bearing requests/responses and oversized bodies.
 
-Limitations: no binary/free-form text bodies, full redirect-chain reconstruction, WebSocket replay or complete secret detection. Custom redactors and independent security review remain future hardening.
+Limitations: no binary/free-form text bodies, full redirect-chain reconstruction, WebSocket replay or complete secret detection. Browser-side custom redactors and independent security review remain future hardening; explicit CLI transformation plugins are now available.
 
 ## Milestone 4 — advanced replay implemented
 
@@ -40,10 +40,18 @@ The interface now uses shared teal/mint tokens, neutral surfaces, native typogra
 
 Shared prerelease version, teal-squircle and mint-dot logo, version validation, Node 22/24 CI, packaged CLI/extension/viewer assets, checksum generation, clean-install smoke testing, and a tag-triggered draft-release workflow. npm and Chrome Web Store publication are separate future distribution steps.
 
-## Next milestones
+## Milestone 6 — regression test generation implemented
 
-6. Playwright test export using expected behavior and optional fixtures.
-7. Agent context export, MCP, issue Markdown and CI artifact verification.
-8. Public specification/plugin ecosystem and cross-browser research.
+Readable Playwright TypeScript with expected-behavior assertions by default, explicit recorded-failure mode, optional standalone API fixture bundles, Prettier formatting, exclusive writes and editor links. The viewer previews and downloads exports from the edited, privacy-filtered recording. Tests execute generated code before and after a fix and type-check recorded bundles.
+
+## Milestone 7 — developer and agent workflows implemented
+
+Bounded JSON context, escaped Markdown issue drafts, a read-only single-artifact MCP server using the official SDK, artifact validation and a tested composite CI verification action. MCP exposes no filesystem browsing, execution or publication tools. Viewer handoffs honor export exclusions.
+
+## Milestone 8 — ecosystem foundations implemented
+
+Versioned artifact specification, machine-readable schema, packaged reader/schema/plugin APIs, explicit validated redaction/enrichment hooks and trusted replay adapters. Chromium, Firefox and WebKit replay are exercised locally and in CI. Documentation covers contributors, standalone viewer hosting and browser capture research.
+
+Remaining expansion: Firefox/Safari extension capture, browser-side third-party capture adapters, a plugin marketplace, broader real-world app coverage, and distribution decisions for public hosting/npm/store publication. The current extension remains Chromium-only. These are not represented as completed browser capture support.
 
 No accounts, hosted storage, analytics or AI service is required for the core workflow.

@@ -32,6 +32,9 @@ for (const name of [
   "docs/REPLAY.md",
   "docs/NETWORK_REPLAY.md",
   "docs/TRACECASE_FORMAT.md",
+  "docs/TEST_EXPORT.md",
+  "docs/AGENT_WORKFLOWS.md",
+  "docs/PLUGINS.md",
 ])
   await cp(name, join(stage, name), { recursive: true });
 const lock = JSON.parse(await readFile("package-lock.json", "utf8"));
@@ -60,10 +63,9 @@ for (const [location, info] of Object.entries(lock.packages)) {
 const noticeText = notices.join("\n");
 await writeFile(join(stage, "THIRD_PARTY_NOTICES.md"), noticeText);
 const dependencies = Object.fromEntries(
-  ["playwright", "fflate", "zod"].map((name) => [
-    name,
-    lock.packages[`node_modules/${name}`].version,
-  ]),
+  ["playwright", "fflate", "zod", "prettier", "@modelcontextprotocol/sdk"].map(
+    (name) => [name, lock.packages[`node_modules/${name}`].version],
+  ),
 );
 await writeFile(
   join(stage, "package.json"),
@@ -85,6 +87,20 @@ await writeFile(
         "README.md",
         "THIRD_PARTY_NOTICES.md",
       ],
+      exports: {
+        "./plugins": {
+          types: "./dist/plugins/src/index.d.ts",
+          import: "./dist/plugins/src/index.js",
+        },
+        "./artifact": {
+          types: "./dist/artifact/src/index.d.ts",
+          import: "./dist/artifact/src/index.js",
+        },
+        "./schema": {
+          types: "./dist/schema/src/index.d.ts",
+          import: "./dist/schema/src/index.js",
+        },
+      },
       dependencies,
       repository: {
         type: "git",
@@ -97,7 +113,7 @@ await writeFile(
 );
 await writeFile(
   join(stage, "README.md"),
-  `# TraceCase ${version}\n\nInstall this tarball with npm, then run \`npx playwright install chromium\`.\n\n\`tracecase open recording.tracecase\` opens local evidence.\n\`tracecase run recording.tracecase --url http://localhost:5173 --report replay.json\` reruns the scenario.\n\nUse \`tracecase --help\` for commands. Networking is live. This is an experimental prerelease.\n\nDocumentation: https://github.com/leracherry/tracecase\n`,
+  `# TraceCase ${version}\n\nInstall this tarball with npm, then run \`npx playwright install chromium\`.\n\n\`tracecase open recording.tracecase\` opens local evidence.\n\`tracecase run recording.tracecase --url http://localhost:5173 --report replay.json\` reruns the scenario.\n\nUse \`tracecase --help\` for commands. Networking defaults to live; recorded API mode is available. This is an experimental prerelease.\n\nDocumentation: https://github.com/leracherry/tracecase\n`,
 );
 await chmod(join(stage, "dist/cli/src/index.js"), 0o755);
 const pack = JSON.parse(

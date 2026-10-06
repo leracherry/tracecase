@@ -3,6 +3,8 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { execFileSync, spawn } from "node:child_process";
 import { createHash } from "node:crypto";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { packArtifact } from "../../dist/artifact/src/index.js";
 import { unzipSync } from "fflate";
 import { createDemoServer } from "../../fixtures/demo-store/server.mjs";
@@ -61,6 +63,49 @@ try {
     throw new Error("Packaged CLI version mismatch");
   const artifact = resolve("examples/checkout.tracecase");
   const report = join(directory, "report.json");
+  execFileSync(process.execPath, [cli, "validate", artifact], {
+    cwd: directory,
+    stdio: "inherit",
+  });
+  const compact = JSON.parse(
+    execFileSync(process.execPath, [cli, "context", artifact], {
+      cwd: directory,
+      encoding: "utf8",
+    }),
+  );
+  if (compact.format !== "tracecase-context")
+    throw new Error("Packaged context export failed");
+  const exportedTest = join(directory, "checkout.spec.ts");
+  execFileSync(
+    process.execPath,
+    [cli, "test", artifact, "--out", exportedTest],
+    { cwd: directory, stdio: "inherit" },
+  );
+  if (!(await readFile(exportedTest, "utf8")).includes("toBeVisible"))
+    throw new Error("Packaged test export failed");
+  const mcpClient = new Client({ name: "release-smoke", version: "1.0" });
+  try {
+    await mcpClient.connect(
+      new StdioClientTransport({
+        command: process.execPath,
+        args: [cli, "mcp", artifact],
+      }),
+    );
+    if ((await mcpClient.listTools()).tools.length !== 4)
+      throw new Error("Packaged MCP tools missing");
+  } finally {
+    await mcpClient.close();
+  }
+  execFileSync(
+    process.execPath,
+    [
+      "--input-type=module",
+      "-e",
+      "await import('tracecase/artifact'); await import('tracecase/plugins'); await import('tracecase/schema');",
+    ],
+    { cwd: directory, stdio: "inherit" },
+  );
+
   // Async child: the parent must keep the demo HTTP server responsive.
   await new Promise((resolve, reject) => {
     const child = spawn(

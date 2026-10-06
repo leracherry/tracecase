@@ -16,15 +16,25 @@ import {
   repairArtifact,
   safeText,
 } from "../../replay/src/index.js";
+import { applyPlugins } from "../../plugins/src/index.js";
+import { artifactContext, issueMarkdown } from "../../context/src/index.js";
+import { loadPlugins, writeTest, editorLink } from "./exports.js";
+import { serveArtifact } from "../../mcp/src/index.js";
 import { promptRepair } from "./repair.js";
 const help = `TraceCase — a bug is a runnable artifact.
   record <url> --out <file> [--title <title>]
   open <file> [--no-browser]
   inspect <file>
+  validate <file>
   run <file> [--url <base-url>] [--headed] [--report <file>] [--json]
   run <file> --repair [--save-repaired <new-file>] [--timeout-ms <ms>]
   run <file> --network recorded [--unmatched abort|live] [--passthrough <URL-glob>]
-  verify <file> [--url <base-url>]
+  verify <file> [--url <base-url>] [--browser chromium|firefox|webkit]
+  test <file> --out <name.spec.ts> [--assertion expected|observed] [--network live|recorded]
+  context <file> [--out <file>]
+  issue <file> [--out <file>]
+  mcp <file>
+  Optional: --plugin <local-module.mjs> (repeatable); test --editor vscode|cursor
 Record opens Chromium. Reproduce the bug, then press Enter in this terminal.
 V0 captures top-frame click/fill/select actions. No account or backend required.`;
 async function main() {
@@ -36,11 +46,12 @@ async function main() {
     console.log(version);
     return;
   }
-  if (!command || command === "--help") {
+  if (!command || command === "--help" || arg === "--help") {
     console.log(help);
     return;
   }
-  const passthrough: string[] = [];
+  const passthrough: string[] = [],
+    pluginPaths: string[] = [];
   const opts: Record<string, string | boolean> = {};
   for (let i = 0; i < args.length; i++) {
     const flag = args[i];
@@ -48,6 +59,12 @@ async function main() {
     else if (flag === "--repair") opts.repair = true;
     else if (flag === "--json") opts.json = true;
     else if (flag === "--no-browser") opts.noBrowser = true;
+    else if (
+      flag === "--plugin" &&
+      args[i + 1] &&
+      !args[i + 1].startsWith("--")
+    )
+      pluginPaths.push(args[++i]);
     else if (
       flag === "--passthrough" &&
       args[i + 1] &&
@@ -64,6 +81,9 @@ async function main() {
         "--timeout-ms",
         "--network",
         "--unmatched",
+        "--assertion",
+        "--editor",
+        "--browser",
       ].includes(flag) &&
       args[i + 1] &&
       !args[i + 1].startsWith("--")
@@ -72,6 +92,48 @@ async function main() {
     else throw new Error(`Unknown or incomplete option: ${flag}`);
   }
   if (!arg) throw new Error("Missing URL or artifact path");
+  const allowed: Record<string, string[]> = {
+    record: ["out", "title"],
+    open: ["noBrowser"],
+    inspect: [],
+    validate: [],
+    context: ["out"],
+    issue: ["out"],
+    mcp: [],
+    test: ["out", "url", "network", "assertion", "editor"],
+    run: [
+      "url",
+      "headed",
+      "report",
+      "json",
+      "repair",
+      "save-repaired",
+      "timeout-ms",
+      "network",
+      "unmatched",
+      "browser",
+    ],
+    verify: [
+      "url",
+      "headed",
+      "report",
+      "json",
+      "repair",
+      "save-repaired",
+      "timeout-ms",
+      "network",
+      "unmatched",
+      "browser",
+    ],
+  };
+  if (!allowed[command]) throw new Error(`Unknown command: ${command}`);
+  for (const key of Object.keys(opts))
+    if (!allowed[command]!.includes(key))
+      throw new Error(`Option --${key} is not supported by ${command}`);
+  if (passthrough.length && !["run", "verify"].includes(command))
+    throw new Error("--passthrough is supported by run and verify");
+
+  const plugins = await loadPlugins(pluginPaths);
   if (command === "record") {
     if (typeof opts.out !== "string")
       throw new Error("record requires --out <file>");
@@ -118,7 +180,11 @@ async function main() {
         steps: [...steps],
         ...(observedText ? { failure: { observedText, expectedText } } : {}),
       };
-      await writeFile(opts.out, serializeArtifact(artifact), { flag: "wx" });
+      await writeFile(
+        opts.out,
+        serializeArtifact(await applyPlugins(artifact, plugins)),
+        { flag: "wx" },
+      );
       console.log(`Saved ${steps.length} actions to ${opts.out}`);
     } finally {
       rl.close();
@@ -126,14 +192,69 @@ async function main() {
     }
     return;
   }
-  if (!["open", "inspect", "run", "verify"].includes(command))
+  if (
+    ![
+      "open",
+      "inspect",
+      "run",
+      "verify",
+      "test",
+      "context",
+      "issue",
+      "mcp",
+      "validate",
+    ].includes(command)
+  )
     throw new Error(`Unknown command: ${command}`);
   if ((await stat(arg)).size > MAX_PACKED_BYTES)
     throw new Error("Artifact exceeds 8 MiB limit");
   const data = await readFile(arg);
-  const artifact = await unpackArtifact(data);
+  const artifact = await applyPlugins(await unpackArtifact(data), plugins);
+  if (command === "mcp") {
+    await serveArtifact(artifact);
+    return;
+  }
+  if (command === "context" || command === "issue") {
+    const output =
+      command === "context"
+        ? JSON.stringify(artifactContext(artifact), null, 2) + "\n"
+        : issueMarkdown(artifact);
+    if (typeof opts.out === "string")
+      await writeFile(opts.out, output, { flag: "wx" });
+    else process.stdout.write(output);
+    return;
+  }
+  if (command === "test") {
+    if (typeof opts.out !== "string")
+      throw new Error("test requires --out <name.spec.ts>");
+    if (
+      opts.editor !== undefined &&
+      !["vscode", "cursor"].includes(String(opts.editor))
+    )
+      throw new Error("Editor must be vscode or cursor");
+    const result = await writeTest(artifact, opts.out, {
+      url: opts.url as string | undefined,
+      network: opts.network as "live" | "recorded" | undefined,
+      assertion: opts.assertion as "expected" | "observed" | undefined,
+    });
+    for (const path of result.paths) console.log(`Saved ${path}`);
+    for (const warning of result.warnings) console.log(warning);
+    if (opts.editor)
+      console.log(
+        editorLink(result.paths[0]!, opts.editor as "vscode" | "cursor"),
+      );
+    return;
+  }
   if (command === "open") {
-    await openViewer(data, { launch: opts.noBrowser !== true });
+    await openViewer(plugins.length ? await packArtifact(artifact) : data, {
+      launch: opts.noBrowser !== true,
+    });
+    return;
+  }
+  if (command === "validate") {
+    console.log(
+      `Valid TraceCase ${artifact.version}: ${artifact.steps.length} steps`,
+    );
     return;
   }
   if (command === "inspect") {
@@ -158,7 +279,14 @@ async function main() {
     !["abort", "live"].includes(String(opts.unmatched))
   )
     throw new Error("--unmatched must be abort or live");
+  if (
+    opts.browser !== undefined &&
+    !["chromium", "firefox", "webkit"].includes(String(opts.browser))
+  )
+    throw new Error("Browser must be chromium, firefox, or webkit");
   const report = await replayWithReport(artifact, {
+    plugins,
+    browser: opts.browser as "chromium" | "firefox" | "webkit" | undefined,
     network: opts.network as "live" | "recorded" | undefined,
     unmatched: opts.unmatched as "abort" | "live" | undefined,
     passthrough,

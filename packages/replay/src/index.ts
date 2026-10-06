@@ -1,4 +1,8 @@
-import { chromium, type Page, type Locator } from "playwright";
+import { chromium, firefox, webkit, type Page, type Locator } from "playwright";
+import {
+  prepareReplay,
+  type TraceCasePlugin,
+} from "../../plugins/src/index.js";
 import { createHash } from "node:crypto";
 import {
   installNetworkReplay,
@@ -35,6 +39,8 @@ export type ReplayReport = {
   format: "tracecase-replay-report";
   version: "1.1";
   artifactSha256: string;
+  browser: "chromium" | "firefox" | "webkit";
+  plugins: string[];
   title: string;
   startedAt: string;
   durationMs: number;
@@ -64,6 +70,8 @@ export type RepairRequest = {
 };
 export type ReplayOptions = NetworkOptions & {
   url?: string;
+  browser?: "chromium" | "firefox" | "webkit";
+  plugins?: TraceCasePlugin[];
   headed?: boolean;
   verify?: boolean;
   timeoutMs?: number;
@@ -115,7 +123,9 @@ export function targetUrl(entryUrl: string, baseUrl?: string): string {
     base.password
   )
     throw new Error("Replay URL must be HTTP(S) without credentials");
-  return new URL(entry.pathname + entry.search, base.origin).href;
+  entry.protocol = base.protocol;
+  entry.host = base.host;
+  return entry.href;
 }
 function timeout(options: ReplayOptions): number {
   const value = options.timeoutMs ?? 5000;
@@ -309,6 +319,8 @@ export async function replayWithReport(
   const destination = targetUrl(artifact.entryUrl, options.url);
   const report: ReplayReport = {
     format: "tracecase-replay-report",
+    browser: options.browser || "chromium",
+    plugins: (options.plugins || []).map((plugin) => safeText(plugin.name)),
     version: "1.1",
     artifactSha256: createHash("sha256")
       .update(JSON.stringify(artifact))
@@ -328,7 +340,12 @@ export async function replayWithReport(
   try {
     if (options.verify && !artifact.failure)
       throw new Error("verify requires recorded expected behavior");
-    browser = await chromium.launch({ headless: !options.headed });
+    const engine = options.browser || "chromium";
+    if (!["chromium", "firefox", "webkit"].includes(engine))
+      throw new Error("Unsupported browser");
+    browser = await { chromium, firefox, webkit }[engine].launch({
+      headless: !options.headed,
+    });
     const context = await browser.newContext({
       viewport: artifact.viewport,
       serviceWorkers: options.network === "recorded" ? "block" : "allow",
@@ -340,6 +357,7 @@ export async function replayWithReport(
         destination,
         options,
       );
+    await prepareReplay(context, artifact, options.plugins || []);
     const page = await context.newPage();
     const recordConsole = (level: "error" | "warning", message: string) => {
       if (report.console.length < 200)

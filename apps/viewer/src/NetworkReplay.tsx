@@ -60,7 +60,11 @@ export function NetworkReplay({ artifact }: { artifact: Artifact }) {
     }
   }
   return (
-    <section className="network-replay" aria-label="Network replay coverage">
+    <section
+      className="network-replay"
+      id="network"
+      aria-label="Network replay coverage"
+    >
       <div className="panel-head">
         <h2>Network replay</h2>
         <label className="button">
@@ -99,6 +103,12 @@ export function NetworkReplay({ artifact }: { artifact: Artifact }) {
         <p className="hint">
           Run with <code>--network recorded --report replay.json</code>, then
           open the report to inspect matches and blocked requests.
+        </p>
+      )}
+      {!!report?.plugins?.length && (
+        <p className="warning">
+          Custom replay plugins: {report.plugins.join(", ")}. Their routes may
+          be outside this coverage.
         </p>
       )}
       {report && (

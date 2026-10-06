@@ -1,0 +1,42 @@
+name: Verify a TraceCase artifact
+description: Validate and replay a recording against an already-running app.
+inputs:
+  artifact:
+    description: Recording path relative to the caller workspace
+    required: true
+  base-url:
+    description: URL of the running application
+    required: true
+  assertion:
+    description: expected for regression verification, observed for reproduction
+    default: expected
+  network:
+    description: recorded or live
+    default: recorded
+outputs:
+  report:
+    description: Absolute JSON report path (available even when replay fails)
+    value: ${{ steps.replay.outputs.report }}
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: "22"
+    - name: Build TraceCase
+      shell: bash
+      working-directory: ${{ github.action_path }}/../../..
+      run: |
+        npm ci
+        npm run build:core
+        npx playwright install --with-deps chromium
+    - name: Verify recording
+      id: replay
+      shell: bash
+      env:
+        TRACECASE_ACTION_ROOT: ${{ github.action_path }}/../../..
+        TRACECASE_ARTIFACT: ${{ inputs.artifact }}
+        TRACECASE_BASE_URL: ${{ inputs.base-url }}
+        TRACECASE_ASSERTION: ${{ inputs.assertion }}
+        TRACECASE_NETWORK: ${{ inputs.network }}
+      run: node "$TRACECASE_ACTION_ROOT/scripts/ci-verify.mjs"

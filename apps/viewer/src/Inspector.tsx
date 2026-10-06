@@ -11,6 +11,7 @@ import {
   type Artifact,
 } from "../../../packages/schema/src/index.js";
 import { sanitizeVisual } from "./sanitize";
+import { ExportWorkbench } from "./ExportWorkbench";
 import { NetworkReplay } from "./NetworkReplay";
 import "rrweb/dist/style.css";
 import "./style.css";
@@ -34,6 +35,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
     [includeScreenshots, setIncludeScreenshots] = useState(true),
     [includeNetwork, setIncludeNetwork] = useState(true),
     [includeConsole, setIncludeConsole] = useState(true);
+  const [downloadNotice, setDownloadNotice] = useState("");
   const [hasPlayer, setHasPlayer] = useState(false);
   const replayRoot = useRef<HTMLDivElement>(null),
     player = useRef<Replayer | undefined>(undefined);
@@ -49,6 +51,11 @@ export function Inspector({ initial }: { initial?: Artifact }) {
       setSelected(undefined);
       setReviewed(false);
       setPlaying(false);
+      setDownloadNotice("");
+      setIncludeVisual(true);
+      setIncludeScreenshots(true);
+      setIncludeNetwork(true);
+      setIncludeConsole(true);
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Unable to open artifact",
@@ -160,37 +167,54 @@ export function Inspector({ initial }: { initial?: Artifact }) {
       player.current.pause(Math.max(0, created + row.time - start));
     }
   }
+  const exportArtifact = useMemo(() => {
+    if (!artifact) return undefined;
+    const updated = {
+      ...artifact,
+      failure:
+        observed && expected
+          ? { observedText: observed, expectedText: expected }
+          : undefined,
+    };
+    if (updated.version === "0.2")
+      updated.evidence = {
+        ...updated.evidence,
+        privacy: { ...updated.evidence.privacy, reviewed },
+        visual: includeVisual ? updated.evidence.visual : [],
+        screenshots: includeScreenshots ? updated.evidence.screenshots : [],
+        network: includeNetwork ? updated.evidence.network : [],
+        events: includeConsole
+          ? updated.evidence.events
+          : updated.evidence.events.filter(
+              (e) => !["console", "error"].includes(e.type),
+            ),
+        capabilities: {
+          ...updated.evidence.capabilities,
+          visual: includeVisual && updated.evidence.capabilities.visual,
+          screenshots:
+            includeScreenshots && updated.evidence.capabilities.screenshots,
+          network: includeNetwork && updated.evidence.capabilities.network,
+          bodies: includeNetwork && updated.evidence.capabilities.bodies,
+          console: includeConsole && updated.evidence.capabilities.console,
+        },
+      };
+    return updated;
+  }, [
+    artifact,
+    observed,
+    expected,
+    reviewed,
+    includeVisual,
+    includeScreenshots,
+    includeNetwork,
+    includeConsole,
+  ]);
   async function download() {
-    if (!artifact) return;
+    if (!exportArtifact || !reviewed) return;
     try {
-      const updated = structuredClone(artifact);
-      if (observed && expected)
-        updated.failure = { observedText: observed, expectedText: expected };
-      else if (observed || expected)
+      if (!!observed !== !!expected)
         throw new Error("Enter both observed and expected behavior");
-      else delete updated.failure;
-      if (updated.version === "0.2") {
-        updated.evidence.privacy.reviewed = true;
-        if (!includeVisual) {
-          updated.evidence.visual = [];
-          updated.evidence.capabilities.visual = false;
-        }
-        if (!includeScreenshots) {
-          updated.evidence.screenshots = [];
-          updated.evidence.capabilities.screenshots = false;
-        }
-        if (!includeNetwork) {
-          updated.evidence.network = [];
-          updated.evidence.capabilities.network = false;
-          updated.evidence.capabilities.bodies = false;
-        }
-        if (!includeConsole) {
-          updated.evidence.events = updated.evidence.events.filter(
-            (e) => !["console", "error"].includes(e.type),
-          );
-          updated.evidence.capabilities.console = false;
-        }
-      }
+      const updated = exportArtifact;
       const bytes = await packArtifact(artifactSchema.parse(updated));
       const url = URL.createObjectURL(
         new Blob([new Uint8Array(bytes).buffer], { type: "application/zip" }),
@@ -199,6 +223,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
       link.href = url;
       link.download = "recording.tracecase";
       link.click();
+      setDownloadNotice("Reviewed recording downloaded.");
       setTimeout(() => URL.revokeObjectURL(url), 10000);
     } catch (error) {
       setError(String(error));
@@ -227,6 +252,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
             accept=".tracecase,.json"
             onChange={(e) => {
               if (e.target.files?.[0]) void load(e.target.files[0]);
+              e.target.value = "";
             }}
           />
         </label>
@@ -279,7 +305,13 @@ export function Inspector({ initial }: { initial?: Artifact }) {
               {evidence.capabilities.warnings.join(" · ")}
             </div>
           )}
-          <section className="workspace">
+          <nav className="section-nav" aria-label="Recording sections">
+            <a href="#evidence">Evidence</a>
+            <a href="#network">API replay</a>
+            <a href="#review">Privacy review</a>
+            <a href="#export">Export & handoff</a>
+          </nav>
+          <section className="workspace" id="evidence">
             <aside className="timeline">
               <h2>Timeline</h2>
               <input
@@ -383,7 +415,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
             </aside>
           </section>
           <NetworkReplay artifact={artifact} />
-          <section className="review">
+          <section className="review" id="review">
             <div>
               <p className="eyebrow">FAILURE & PRIVACY REVIEW</p>
               <h2>Describe the failure. Define the fix.</h2>
@@ -450,6 +482,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
               >
                 Export reviewed artifact
               </button>
+              <p role="status">{downloadNotice}</p>
               <p className="hint">
                 Run locally:{" "}
                 <code>
@@ -458,6 +491,13 @@ export function Inspector({ initial }: { initial?: Artifact }) {
               </p>
             </div>
           </section>
+          {exportArtifact && (
+            <ExportWorkbench
+              key={artifact.createdAt + artifact.title}
+              artifact={exportArtifact}
+              reviewed={reviewed}
+            />
+          )}
         </>
       )}
     </main>

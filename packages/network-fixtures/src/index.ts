@@ -2,13 +2,9 @@ import { createHash } from "node:crypto";
 import type { BrowserContext } from "playwright";
 import type { Artifact } from "../../schema/src/index.js";
 import { redactBody, redactUrl } from "../../redaction/src/index.js";
-import {
-  contentType,
-  fixtureIssue,
-  normalizedUrl,
-  type NetworkCoverage,
-} from "./plan.js";
-export { fixturePlan } from "./plan.js";
+import { contentType, fixtureIssue, normalizedUrl } from "./matching.js";
+export { fixturePlan } from "./matching.js";
+import type { NetworkCoverage } from "./plan.js";
 export type { NetworkCoverage } from "./plan.js";
 export type NetworkOptions = {
   network?: "live" | "recorded";

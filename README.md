@@ -36,6 +36,8 @@ Reload any target tabs that were open during installation.
 4. Inspect the local review page. Select timeline events to seek visual replay and inspect requests, errors, and environment.
 5. Enter the exact observed failure text and the text expected after the fix. Review privacy, optionally exclude evidence categories, and export the file.
 
+Before recording, open **Privacy settings** in the popup to add project-specific sensitive fields or private page elements. Rules stay local, add to built-in redaction, and apply to the next recording. See [custom privacy rules](docs/REDACTION.md#custom-browser-privacy-rules).
+
 Captures persist in local IndexedDB across popup closure and document navigation. The last recording remains available through **Review last recording**. Starting another recording replaces this temporary capture; exported files remain yours.
 
 ## Try the demo

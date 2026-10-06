@@ -1,6 +1,9 @@
 import type { Step, Candidate } from "../../schema/src/index.js";
 import {
   PRIVATE_SELECTOR,
+  defaultPrivacyRules,
+  customPrivateSelector,
+  type PrivacyRules,
   sensitiveKey,
   redactText,
   redactUrl,
@@ -10,13 +13,26 @@ export function startCapture(
   onGap: (message: string) => void,
   onPrivate: () => void,
   startedAt = Date.now(),
+  rules: PrivacyRules = defaultPrivacyRules,
 ) {
+  const selector = [
+    PRIVATE_SELECTOR,
+    "[data-tracecase-ignore]",
+    customPrivateSelector(rules),
+  ]
+    .filter(Boolean)
+    .join(",");
   const time = () => Math.max(0, Date.now() - startedAt);
   const privateElement = (el: Element) =>
-    !!el.closest(PRIVATE_SELECTOR + ", [data-tracecase-ignore]") ||
+    !!el.closest(selector) ||
     sensitiveKey(
       [el.getAttribute("name"), el.id, el.getAttribute("autocomplete")].join(
         " ",
+      ),
+    ) ||
+    rules.fields.some((key) =>
+      [el.getAttribute("name"), el.id].some(
+        (value) => value?.toLowerCase() === key,
       ),
     );
   const candidates = (el: Element): Candidate[] => {
@@ -62,10 +78,13 @@ export function startCapture(
       result.push({
         kind: "role",
         role: role as "button",
-        name: redactText(name).slice(0, 4096),
+        name: redactText(name, rules).slice(0, 4096),
       });
     if (label)
-      result.push({ kind: "label", value: redactText(label).slice(0, 4096) });
+      result.push({
+        kind: "label",
+        value: redactText(label, rules).slice(0, 4096),
+      });
     const placeholder = el.getAttribute("placeholder");
     if (placeholder) result.push({ kind: "placeholder", value: placeholder });
     return result;
@@ -92,8 +111,8 @@ export function startCapture(
       ...(value === undefined
         ? {}
         : {
-            value: redactText(value),
-            ...(type === "fill" && redactText(value) !== value
+            value: redactText(value, rules),
+            ...(type === "fill" && redactText(value, rules) !== value
               ? { redacted: true }
               : {}),
           }),
@@ -156,7 +175,7 @@ export function startCapture(
       emit({
         type: "navigation",
         mode: "history",
-        url: redactUrl(current),
+        url: redactUrl(current, rules),
         time: time(),
       });
     }

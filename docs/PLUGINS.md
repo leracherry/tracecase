@@ -23,7 +23,7 @@ The installable CLI package exports types at `tracecase/plugins`, validated read
 
 ## Custom redaction and metadata
 
-`transformArtifact` receives a copy. Each result is validated before the next plugin runs. Use it to apply organization-specific redaction, normalize actions, or enrich existing schema fields such as title and capability warnings. The original recording file is unchanged. The hook runs before inspection, exports, MCP startup and replay, and before the CLI recorder writes its file. Extension capture still uses its built-in pre-persistence redaction; this hook is not a browser-extension capture hook.
+`transformArtifact` receives a copy. Each result is validated before the next plugin runs. Use it to apply organization-specific redaction, normalize actions, or enrich existing schema fields such as title and capability warnings. The original recording file is unchanged. The hook runs before inspection, exports, MCP startup and replay, and before the CLI recorder writes its file. Extension capture uses built-in pre-persistence redaction plus local [declarative privacy rules](REDACTION.md#custom-browser-privacy-rules); this hook is not a browser-extension capture hook.
 
 ## Framework and API adapters
 

@@ -20,7 +20,7 @@ React/Vite local viewer, rrweb recording/replay, searchable/filterable correlate
 
 Explicit enhanced debugger capture, fetch/XHR metadata/status/timing, bounded JSON/form bodies, failed-request highlighting, credential/header/body redaction before persistence, size/count limits, capabilities/warnings, export privacy review and standard fallback. Tested with actual Chromium extension sessions in both modes, credential-bearing requests/responses and oversized bodies.
 
-Limitations: no binary/free-form text bodies, full redirect-chain reconstruction, WebSocket replay or complete secret detection. Browser-side custom redactors and independent security review remain future hardening; explicit CLI transformation plugins are now available.
+Limitations: no binary/free-form text bodies, full redirect-chain reconstruction, WebSocket replay or complete secret detection. Browser-side declarative privacy rules and explicit CLI transformation plugins are available. Independent security review remains future hardening.
 
 ## Milestone 4 — advanced replay implemented
 
@@ -53,5 +53,11 @@ Bounded JSON context, escaped Markdown issue drafts, a read-only single-artifact
 Versioned artifact specification, machine-readable schema, packaged reader/schema/plugin APIs, explicit validated redaction/enrichment hooks and trusted replay adapters. Chromium, Firefox and WebKit replay are exercised locally and in CI. Documentation covers contributors, standalone viewer hosting and browser capture research.
 
 Remaining expansion: Firefox/Safari extension capture, browser-side third-party capture adapters, a plugin marketplace, broader real-world app coverage, and distribution decisions for public hosting/npm/store publication. The current extension remains Chromium-only. These are not represented as completed browser capture support.
+
+## Milestone 9 — browser privacy controls implemented
+
+Local settings for additional sensitive field names and simple private-element selectors, strict bounded validation, additive built-in protection and immutable per-recording rules. Custom redaction runs before persistence across actions, DOM evidence, console errors, URLs and enhanced API data; private elements are hidden for screenshots. Actual extension tests inspect storage, exercise navigation and verify that settings changes affect only new recordings. The settings page follows the shared responsive design system.
+
+Next candidates: broader real-world app validation and Firefox standard capture. Public distribution and Safari packaging still require separate decisions and platform verification.
 
 No accounts, hosted storage, analytics or AI service is required for the core workflow.

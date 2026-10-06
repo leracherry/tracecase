@@ -3,6 +3,10 @@ import { record } from "rrweb";
 import { startCapture } from "../../../packages/capture/src/index.js";
 import {
   PRIVATE_SELECTOR,
+  parsePrivacyRules,
+  defaultPrivacyRules,
+  customPrivateSelector,
+  type PrivacyRules,
   redactText,
   redactVisual,
 } from "../../../packages/redaction/src/index.js";
@@ -18,6 +22,7 @@ export default defineContentScript({
     let rows: { kind: string; value: unknown }[] = [],
       excludedInputs = 0,
       started = 0;
+    let rules: PrivacyRules = defaultPrivacyRules;
     let sending = Promise.resolve();
     const send = (message: unknown) =>
       chrome.runtime.sendMessage(message).then((reply) => {
@@ -45,7 +50,7 @@ export default defineContentScript({
         value: {
           type,
           time: Math.max(0, Date.now() - started),
-          message: redactText(message).slice(0, 8192),
+          message: redactText(message, rules).slice(0, 8192),
         },
       });
     const consoleEvent = (raw: Event) => {
@@ -69,21 +74,27 @@ export default defineContentScript({
       while (rows.length) await flush();
       await flush();
     };
-    function begin(time: number) {
+    function begin(time: number, policy: unknown) {
       if (stopActions) return;
+      rules = parsePrivacyRules(policy);
       started = time;
       stopActions = startCapture(
         (step) => rows.push({ kind: "step", value: step }),
         (message) => event("gap", message),
         () => excludedInputs++,
         started,
+        rules,
       );
       stopVisual = record({
         emit: (visual) =>
-          rows.push({ kind: "visual", value: redactVisual(visual) }),
-        blockSelector:
-          PRIVATE_SELECTOR +
-          ", [data-tracecase-ignore],iframe,video,audio,canvas",
+          rows.push({ kind: "visual", value: redactVisual(visual, 0, rules) }),
+        blockSelector: [
+          PRIVATE_SELECTOR,
+          "[data-tracecase-ignore],iframe,video,audio,canvas",
+          customPrivateSelector(rules),
+        ]
+          .filter(Boolean)
+          .join(","),
         maskAllInputs: true,
         maskTextSelector: "[data-private]",
         inlineStylesheet: false,
@@ -138,8 +149,15 @@ export default defineContentScript({
     let mask: HTMLStyleElement | undefined;
     chrome.runtime.onMessage.addListener((message, _sender, reply) => {
       if (message.type === "start") {
-        begin(message.started);
-        reply({ ok: true });
+        try {
+          begin(message.started, message.rules);
+          reply({ ok: true });
+        } catch {
+          reply({
+            error:
+              "Privacy rules could not be applied. Recording was not started.",
+          });
+        }
       } else if (message.type === "stop") {
         void stop().then(() => reply({ ok: true }));
         return true;
@@ -147,7 +165,10 @@ export default defineContentScript({
         mask = document.createElement("style");
         mask.dataset.tracecaseIgnore = "";
         mask.textContent =
-          'input,textarea,select{color:transparent!important;text-shadow:none!important} [data-private],input[type=password],input[autocomplete^="cc-"]{visibility:hidden!important}';
+          'input,textarea,select{color:transparent!important;text-shadow:none!important} [data-private],input[type=password],input[autocomplete^="cc-"]{visibility:hidden!important}' +
+          (customPrivateSelector(rules)
+            ? `${customPrivateSelector(rules)}{opacity:0!important}`
+            : "");
         document.documentElement.append(mask);
         reply({ ok: true });
       } else if (message.type === "unmask") {
@@ -157,7 +178,7 @@ export default defineContentScript({
     });
     void send({ type: "resume" })
       .then((result) => {
-        if (result?.started) begin(result.started);
+        if (result?.started) begin(result.started, result.rules);
       })
       .catch(() => {});
     window.addEventListener("pagehide", () => {

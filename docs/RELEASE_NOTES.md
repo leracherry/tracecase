@@ -4,6 +4,7 @@ First release candidate for the local capture → inspect → replay workflow.
 
 ## Included
 
+- Add local browser privacy settings for sensitive fields and private page elements, applied before storage and retained across navigation for each recording.
 - Standalone Playwright regression/reproduction test exports with optional recorded fixtures.
 - Compact agent context, Markdown issue drafts, single-artifact read-only MCP, and CI verification.
 - Viewer export workbench with previews, privacy exclusions and updated failure semantics.

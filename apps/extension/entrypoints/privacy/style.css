@@ -1,0 +1,141 @@
+@import "../../../../packages/ui/tokens.css";
+.privacy-settings {
+  max-width: 1000px;
+  margin: auto;
+  padding: 32px;
+}
+.settings-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 650;
+  font-size: 16px;
+  text-decoration: none;
+  color: var(--brand-ink);
+  margin-bottom: 40px;
+}
+.eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.7px;
+  color: var(--muted);
+}
+h1 {
+  font-size: 32px;
+  line-height: 1.2;
+  letter-spacing: -0.7px;
+  margin: 12px 0;
+}
+.intro {
+  color: var(--muted);
+  max-width: 640px;
+  font-size: 15px;
+}
+.baseline {
+  background: var(--selected);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+  margin: 28px 0;
+}
+.baseline p {
+  margin: 6px 0 0;
+}
+form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+}
+fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.settings-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+}
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-weight: 600;
+}
+.hint {
+  display: block;
+  font-weight: 400;
+  font-size: 13px;
+}
+textarea {
+  margin-top: auto;
+  width: 100%;
+  resize: vertical;
+  min-height: 160px;
+  padding: 12px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+  color: var(--text);
+  font:
+    14px/1.6 ui-monospace,
+    SFMono-Regular,
+    Consolas,
+    monospace;
+}
+textarea:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
+}
+.settings-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+.settings-error {
+  background: var(--danger-surface);
+  color: var(--danger);
+  padding: 12px;
+  border-radius: var(--radius-small);
+}
+.settings-notice {
+  color: var(--positive);
+}
+.settings-notice:empty {
+  margin: 0;
+}
+.settings-note {
+  margin-top: 32px;
+  color: var(--muted);
+}
+h2 {
+  font-size: 16px;
+  color: var(--text);
+}
+@media (max-width: 700px) {
+  .privacy-settings {
+    padding: 24px 16px;
+  }
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+  form {
+    padding: 16px;
+  }
+  h1 {
+    font-size: 28px;
+  }
+  textarea {
+    font-size: 16px;
+  }
+  .settings-actions button {
+    width: 100%;
+  }
+}

@@ -96,3 +96,83 @@ test("default network redaction excludes credentials and oversized/unsupported b
     ).includes("secret"),
   );
 });
+
+test("custom privacy rules are bounded, additive, and redact structured and textual data", async () => {
+  const { parsePrivacyRules, redactText, redactVisual } =
+    await import("../dist/redaction/src/index.js");
+  const rules = parsePrivacyRules({
+    version: 1,
+    fields: ["Customer_ID", "customer_id", "case.code"],
+    selectors: [".confidential", '[name="private-field"]'],
+  });
+  assert.deepEqual(rules.fields, ["customer_id", "case.code"]);
+  for (const invalid of [
+    null,
+    { ...rules, version: 2 },
+    { ...rules, fields: [".*"] },
+    { ...rules, selectors: ["body{display:none}"] },
+    { ...rules, selectors: ["div > p"] },
+    { ...rules, fields: Array(51).fill("a") },
+    { ...rules, execute: "code" },
+  ])
+    assert.throws(() => parsePrivacyRules(invalid));
+  assert.equal(
+    redactHeaders(
+      {
+        CUSTOMER_ID: "PRIVATE",
+        Authorization: "PRIVATE",
+        Accept: "application/json",
+      },
+      rules,
+    ).CUSTOMER_ID,
+    "[REDACTED]",
+  );
+  assert.equal(
+    redactHeaders({ Authorization: "PRIVATE" }, rules).Authorization,
+    "[REDACTED]",
+  );
+  assert.equal(
+    new URL(
+      redactUrl("https://example.test/?customer_id=PRIVATE&ok=yes", rules),
+    ).searchParams.get("customer_id"),
+    "[REDACTED]",
+  );
+  assert.deepEqual(
+    JSON.parse(
+      redactBody(
+        '{"nested":[{"Customer_ID":"PRIVATE","ok":2}]}',
+        "application/json",
+        rules,
+      ),
+    ),
+    { nested: [{ Customer_ID: "[REDACTED]", ok: 2 }] },
+  );
+  assert.equal(
+    new URLSearchParams(
+      redactBody(
+        "customer_id=PRIVATE&ok=yes",
+        "application/x-www-form-urlencoded",
+        rules,
+      ),
+    ).get("customer_id"),
+    "[REDACTED]",
+  );
+  assert.equal(
+    redactText("customer_id=PRIVATE case.code:PRIVATE caseXcode:public", rules),
+    "customer_id=[REDACTED] case.code:[REDACTED] caseXcode:public",
+  );
+  assert.ok(
+    !JSON.stringify(
+      redactVisual(
+        {
+          data: {
+            href: "https://example.test/?customer_id=PRIVATE",
+            textContent: "customer_id=PRIVATE",
+          },
+        },
+        0,
+        rules,
+      ),
+    ).includes("PRIVATE"),
+  );
+});

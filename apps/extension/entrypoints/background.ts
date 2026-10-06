@@ -8,6 +8,9 @@ import {
 } from "../../../packages/schema/src/index.js";
 import {
   redactBody,
+  defaultPrivacyRules,
+  parsePrivacyRules,
+  type PrivacyRules,
   redactHeaders,
   redactText,
   redactUrl,
@@ -22,6 +25,7 @@ type Session = {
   bytes: number;
   artifact: Extract<Artifact, { version: "0.2" }>;
   screenshots: boolean;
+  rules: PrivacyRules;
   pending: Record<
     string,
     { request: Evidence["network"][number]; timestamp: number }
@@ -177,12 +181,25 @@ export default defineBackground(() => {
           const internal =
             sender.id === chrome.runtime.id &&
             sender.url?.startsWith(chrome.runtime.getURL("/"));
+          if (message.type === "privacy:get" && internal)
+            return parsePrivacyRules(
+              (await chrome.storage.local.get("privacyRules")).privacyRules ??
+                defaultPrivacyRules,
+            );
+          if (message.type === "privacy:save" && internal) {
+            const rules = parsePrivacyRules(message.rules);
+            await chrome.storage.local.set({ privacyRules: rules });
+            return rules;
+          }
           if (message.type === "status")
             return s
               ? {
                   tabId: s.tabId,
                   active: s.active,
                   screenshots: s.screenshots,
+                  privacyRuleCount:
+                    (s.rules?.fields.length || 0) +
+                    (s.rules?.selectors.length || 0),
                   mode: s.artifact.evidence.capabilities.mode,
                   warnings: s.artifact.evidence.capabilities.warnings,
                 }
@@ -192,6 +209,10 @@ export default defineBackground(() => {
             const tab = await chrome.tabs.get(message.tabId);
             if (!tab.url || !/^https?:/.test(tab.url))
               throw new Error("Recording supports HTTP(S) pages only");
+            const rules = parsePrivacyRules(
+              (await chrome.storage.local.get("privacyRules")).privacyRules ??
+                defaultPrivacyRules,
+            );
             await clearRows();
             const session: Session = {
               counts: {
@@ -207,12 +228,13 @@ export default defineBackground(() => {
               bytes: 0,
               screenshots: message.screenshots === true,
               pending: {},
+              rules,
               artifact: {
                 format: "tracecase",
                 version: "0.2",
                 title: "Browser reproduction",
                 createdAt: new Date().toISOString(),
-                entryUrl: redactUrl(tab.url),
+                entryUrl: redactUrl(tab.url, rules),
                 viewport: { width: 1280, height: 800 },
                 steps: [],
                 evidence: emptyEvidence(),
@@ -221,6 +243,11 @@ export default defineBackground(() => {
             session.artifact.evidence.capabilities.screenshots =
               session.screenshots;
 
+            const ruleCount = rules.fields.length + rules.selectors.length;
+            if (ruleCount)
+              session.artifact.evidence.capabilities.warnings.push(
+                `${ruleCount} custom privacy rules applied before saving evidence. Excluded interactions may require manual reproduction.`,
+              );
             if (message.enhanced)
               try {
                 await chrome.debugger.attach({ tabId: session.tabId }, "1.3");
@@ -245,10 +272,12 @@ export default defineBackground(() => {
               }
             await save(session);
             try {
-              await chrome.tabs.sendMessage(session.tabId, {
+              const started = await chrome.tabs.sendMessage(session.tabId, {
                 type: "start",
                 started: session.started,
+                rules,
               });
+              if (started?.error) throw new Error(started.error);
               await chrome.scripting.executeScript({
                 target: { tabId: session.tabId },
                 world: "MAIN",
@@ -284,12 +313,15 @@ export default defineBackground(() => {
                 value: {
                   type: "navigation",
                   mode: "document",
-                  url: redactUrl(sender.url || s.artifact.entryUrl),
+                  url: redactUrl(sender.url || s.artifact.entryUrl, s.rules),
                   time: elapsed(s),
                 },
               },
             ]);
-            return { started: s.started };
+            return {
+              started: s.started,
+              rules: s.rules ?? defaultPrivacyRules,
+            };
           }
           if (message.type === "batch" && recordingTab && s.active) {
             if (!Array.isArray(message.rows) || message.rows.length > 100)
@@ -303,7 +335,7 @@ export default defineBackground(() => {
                   kind: "event",
                   value: evidenceSchema.shape.events.element.parse({
                     ...row.value,
-                    message: redactText(String(row.value.message)),
+                    message: redactText(String(row.value.message), s.rules),
                   }),
                 });
               else if (row.kind === "visual") {
@@ -434,20 +466,20 @@ export default defineBackground(() => {
             await save(s);
             return;
           }
-          const headers = redactHeaders(p.request.headers || {});
+          const headers = redactHeaders(p.request.headers || {}, s.rules);
           const contentType =
             Object.entries(headers).find(
               ([key]) => key.toLowerCase() === "content-type",
             )?.[1] || "";
           const requestBody = p.request.postData
-            ? redactBody(p.request.postData, contentType)
+            ? redactBody(p.request.postData, contentType, s.rules)
             : undefined;
           s.pending[p.requestId] = {
             timestamp: p.timestamp,
             request: {
               id: p.requestId,
               time: now,
-              url: redactUrl(p.request.url),
+              url: redactUrl(p.request.url, s.rules),
               method: p.request.method,
               requestHeaders: headers,
               responseHeaders: {},
@@ -469,6 +501,7 @@ export default defineBackground(() => {
           pending.request.status = p.response.status;
           pending.request.responseHeaders = redactHeaders(
             p.response.headers || {},
+            s.rules,
           );
           s.artifact.evidence.privacy.redactions +=
             JSON.stringify(pending.request.responseHeaders).split("[REDACTED]")
@@ -501,7 +534,7 @@ export default defineBackground(() => {
                 )?.[1] || "";
               const body = result.base64Encoded
                 ? undefined
-                : redactBody(result.body, contentType);
+                : redactBody(result.body, contentType, s.rules);
               if (body === undefined)
                 request.bodyOmitted =
                   "Only bounded JSON and form bodies are persisted";

@@ -1,6 +1,6 @@
 # Extension permissions
 
-- `storage`: persist session metadata locally. Evidence batches are stored in IndexedDB.
+- `storage`: persist session metadata and custom privacy settings locally. Evidence batches are stored in IndexedDB.
 - `activeTab`: inspect the selected tab and capture opt-in standard-mode screenshots after the extension is invoked.
 - `scripting`: install the console-error bridge into the recorded page’s main world. No remote code is loaded.
 - HTTP(S) host access: install the idle content script and resume capture after document navigation. It records only when the user starts a session; browser-internal pages are excluded.

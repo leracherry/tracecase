@@ -16,6 +16,6 @@ A privacy review is required before export, and evidence categories can be exclu
 
 ## Execution
 
-Executable replay launches a fresh Playwright browser and runs the recorded actions against the selected target with live networking. It can modify application state. It does not import cookies/storage secrets from recordings. Authentication profiles and deterministic fixture replay are future work.
+Executable replay launches a fresh Playwright browser and runs the recorded actions against the selected target with live networking by default or explicit recorded API fixtures. It can modify application state. It does not import cookies/storage secrets from recordings. Authentication profiles remain unsupported. In recorded mode, unmatched API requests are blocked unless explicitly allowed; static frontend assets remain live. Trusted local plugins can alter routing and run with the CLI process’s permissions.
 
 Report security issues privately through the repository owner’s GitHub contact. Do not publish recordings containing secrets in public issues.

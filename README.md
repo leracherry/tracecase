@@ -1,177 +1,129 @@
-<p align="center"><img src="docs/assets/tracecase-logo.png" width="150" alt="TraceCase teal squircle with mint dot logo" /></p>
+<p align="center">
+  <img src="docs/assets/tracecase-logo.png" width="112" alt="TraceCase logo — a dark teal squircle with a mint dot" />
+</p>
+<h1 align="center">TraceCase</h1>
+<p align="center"><strong>Record a bug. Replay the evidence. Verify the fix.</strong></p>
+<p align="center">
+  <a href="https://github.com/leracherry/tracecase/actions/workflows/ci.yml"><img src="https://github.com/leracherry/tracecase/actions/workflows/ci.yml/badge.svg" alt="CI status" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-0D252B.svg" alt="MIT license" /></a>
+  <a href="docs/RELEASE_NOTES.md"><img src="https://img.shields.io/badge/status-experimental%20alpha-176B56.svg" alt="Experimental alpha" /></a>
+</p>
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="docs/WORKFLOWS.md">Visual walkthrough</a> ·
+  <a href="docs/README.md">Documentation</a> ·
+  <a href="CONTRIBUTING.md">Contributing</a>
+</p>
 
-# TraceCase
+TraceCase turns a browser bug into a portable `.tracecase` recording: actions, visual evidence, console errors, environment details, and optional API responses. Inspect it locally, reproduce it against your development build, then export a Playwright regression test or a concise handoff for a coding agent.
 
-[![CI](https://github.com/leracherry/tracecase/actions/workflows/ci.yml/badge.svg)](https://github.com/leracherry/tracecase/actions/workflows/ci.yml)
-[![Release](https://github.com/leracherry/tracecase/actions/workflows/release.yml/badge.svg)](https://github.com/leracherry/tracecase/actions/workflows/release.yml)
-[![License: MIT](https://img.shields.io/badge/license-MIT-0D252B.svg)](LICENSE)
+**No account, hosted backend, app SDK, or telemetry is required.** Recording and inspection happen on your device. Executable replay connects to the application you choose.
 
-**0.1.0-alpha.1 is being prepared.** Source builds are available now; release bundles are produced by GitHub Actions. This is an experimental Chromium developer tool.
+![TraceCase inspecting a synthetic checkout failure, with a correlated timeline, visual replay, and event details](docs/assets/screenshots/inspect.png)
 
-Record a frontend bug once. Inspect it locally. Run it against your development build.
+_The checked-in demo, captured with the actual extension. See the [complete workflow](docs/WORKFLOWS.md)._
 
-TraceCase is an experimental local-first Chromium recorder and evidence viewer. It captures semantic actions, visual replay, console errors, environment details, and optionally API context into a portable `.tracecase` file. No account, backend, app SDK, or telemetry.
+> **Experimental alpha:** `0.1.0-alpha.1` is being prepared. Build from source today; CI produces release bundles. Browser capture supports Chromium. Executable replay is tested in Chromium, Firefox, and WebKit. See [compatibility and limits](docs/BROWSER_COMPATIBILITY.md).
 
-## Build & install
+## What you can do
 
-Requires Node.js **22.12 or newer**.
+| Workflow                    | Result                                                                                                   |
+| --------------------------- | -------------------------------------------------------------------------------------------------------- |
+| **Record and inspect**      | Semantic actions, a searchable timeline, visual replay, console errors, and request details in one file. |
+| **Reproduce and verify**    | Separate checks for the observed failure and the expected behavior after a fix.                          |
+| **Replay captured APIs**    | Reproduce historical responses against a running frontend, with explicit mismatch reporting.             |
+| **Create regression tests** | Readable Playwright TypeScript, with optional standalone API fixtures.                                   |
+| **Hand off evidence**       | Markdown issue drafts, bounded agent context, read-only MCP tools, and a CI verification action.         |
+| **Control capture privacy** | Built-in redaction, custom sensitive fields and private elements, and a review before export.            |
+
+## Quick start
+
+Requires **Node.js 22.12+**, npm, Git, and a Chromium browser for extension capture. Repository access is required to clone it.
 
 ```sh
+git clone https://github.com/leracherry/tracecase.git
+cd tracecase
 npm ci
 npx playwright install chromium
 npm run build
 ```
 
-Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select:
-
-```text
-apps/extension/.output/chrome-mv3
-```
-
-Reload any target tabs that were open during installation.
-
-1. Open your local/staging app and click the TraceCase extension.
-2. Optionally enable enhanced network capture or screenshots. Enhanced capture requests Chrome’s debugger permission and displays Chrome’s debugging banner.
-3. Click **Start recording**, reproduce the bug, then use **Mark bug** and **Stop** in the page overlay.
-4. Inspect the local review page. Select timeline events to seek visual replay and inspect requests, errors, and environment.
-5. Enter the exact observed failure text and the text expected after the fix. Review privacy, optionally exclude evidence categories, and export the file.
-
-Before recording, open **Privacy settings** in the popup to add project-specific sensitive fields or private page elements. Rules stay local, add to built-in redaction, and apply to the next recording. See [custom privacy rules](docs/REDACTION.md#custom-browser-privacy-rules).
-
-Captures persist in local IndexedDB across popup closure and document navigation. The last recording remains available through **Review last recording**. Starting another recording replaces this temporary capture; exported files remain yours.
-
-## Try the demo
+Start the demo in one terminal:
 
 ```sh
 npm run demo
 ```
 
-Open `http://127.0.0.1:5173/checkout`, select Canada, enter a postal code, and click Continue. The page shows `Tax service unavailable`. Record this failure and use `Order summary is visible` as the expected outcome.
-
-```sh
-npm run tracecase -- open recording.tracecase
-npm run tracecase -- inspect recording.tracecase
-npm run tracecase -- run recording.tracecase --url http://127.0.0.1:5173
-# FAILURE REPRODUCED
-```
-
-A checked-in prototype example is available without extension capture:
+In a second terminal, reproduce the checked-in example:
 
 ```sh
 npm run tracecase -- run examples/checkout.tracecase --url http://127.0.0.1:5173
+# FAILURE REPRODUCED
 ```
 
-To check the fix, stop the demo and restart it with:
+That successful reproduction confirms the bug exists. To verify the fix, stop the demo with **Ctrl+C**, restart it in fixed mode, then run the expected-outcome check:
 
 ```sh
+# Terminal 1 — macOS/Linux
 TRACECASE_DEMO_FIXED=1 npm run demo
-npm run tracecase -- verify recording.tracecase --url http://127.0.0.1:5173
+```
+
+```sh
+# Terminal 2
+npm run tracecase -- verify examples/checkout.tracecase --url http://127.0.0.1:5173
 # VERIFIED
 ```
 
-`run` checks observed failure text when present. `verify` checks the expected outcome. Failed actions/assertions return a nonzero status. Without a marker, `run` reports only completed actions. Networking defaults to **live**; use recorded mode to serve captured API responses.
+For PowerShell, use `$env:TRACECASE_DEMO_FIXED="1"; npm run demo`. See the [getting-started guide](docs/GETTING_STARTED.md) for extension installation, your first capture, and package installation.
 
-The original interactive Playwright recorder remains available:
+## Capture your own bug
 
-```sh
-npm run tracecase -- record http://127.0.0.1:5173/checkout --out checkout.local.tracecase
-```
+1. Open `chrome://extensions`, enable **Developer mode**, and load `apps/extension/.output/chrome-mv3` with **Load unpacked**. Reload your target tab.
+2. Open TraceCase. Configure **Privacy settings** if needed, then click **Start recording**. Enhanced API capture and screenshots are optional.
+3. Reproduce the issue, **Mark bug**, and **Stop**. The review page opens locally.
+4. Inspect the evidence, enter the observed and expected text, choose export categories, and complete the privacy review.
+5. Export the recording, or use **Export & handoff** to download a test, issue draft, or agent context.
 
-## Replay diagnostics and repair
+Starting a new recording replaces the extension’s last temporary capture. Exported files remain yours. [Follow the screenshot walkthrough →](docs/WORKFLOWS.md)
 
-```sh
-npm run tracecase -- run recording.tracecase --url http://127.0.0.1:5173 --report replay.json
-npm run tracecase -- run recording.tracecase --url http://127.0.0.1:5173 --repair --save-repaired repaired.tracecase
-npm run tracecase -- verify recording.tracecase --url http://127.0.0.1:5173 --json
-```
+## Turn evidence into a regression test
 
-Reports distinguish missing/ambiguous locators, action divergence and failed assertions. Repair opens a visible browser and asks you to choose a semantic replacement; the original recording remains unchanged. See [replay behavior and report statuses](docs/REPLAY.md).
-
-## Replay recorded API responses
-
-```sh
-npm run tracecase -- run recording.tracecase --url http://localhost:5173 --network recorded --report replay.json
-```
-
-Enhanced capture stores reviewed API responses in the artifact. Recorded replay matches URL, request body and occurrence; unmatched API requests are blocked. Use `--passthrough '*/analytics/*'` for specific live traffic, or `--unmatched live` for a hybrid run. The viewer opens replay reports to show actual coverage and mismatch reasons. Static frontend resources remain live.
-
-The synthetic [recorded checkout example](examples/checkout-recorded.tracecase) reproduces the historical tax failure even with a fixed backend:
-
-```sh
-TRACECASE_DEMO_FIXED=1 npm run demo
-# In another terminal:
-npm run tracecase -- run examples/checkout-recorded.tracecase --url http://127.0.0.1:5173 --network recorded --report historical.json
-# FAILURE REPRODUCED
-npm run tracecase -- verify examples/checkout-recorded.tracecase --url http://127.0.0.1:5173
-# VERIFIED (live backend)
-```
-
-See [recorded API replay](docs/NETWORK_REPLAY.md) for supported bodies, redaction and matching rules.
-
-## Turn the recording into a regression test
+![Export workbench showing test options, a source preview, and the Playwright download button](docs/assets/screenshots/export.png)
 
 ```sh
 npm run tracecase -- test recording.tracecase --out tests/checkout.spec.ts --url http://localhost:5173
-npm run tracecase -- test recording.tracecase --out tests/historical.spec.ts --network recorded --assertion observed
-npm run tracecase -- context recording.tracecase --out context.json
-npm run tracecase -- issue recording.tracecase --out issue.md
-npm run tracecase -- mcp recording.tracecase
 ```
 
-Tests assert expected behavior by default. Recorded mode exports a self-contained fixture bundle; the generated tests run with `@playwright/test` and do not require TraceCase. In the viewer, edit the failure pair, complete privacy review, and use **Export & handoff** to preview and download tests, issue drafts or agent context.
+Generated tests assert **expected behavior by default** and run with `@playwright/test`. Use `--assertion observed` for a reproduction check, or `--network recorded` for a standalone fixture bundle. [Test export guide →](docs/TEST_EXPORT.md)
 
-See [test generation](docs/TEST_EXPORT.md), [MCP and CI workflows](docs/AGENT_WORKFLOWS.md), [plugin API](docs/PLUGINS.md), and the [documentation index](docs/README.md).
+## Find your next step
 
-## Release packages
+| I want to…                                    | Read                                                                                 |
+| --------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Install, record, and replay my first bug      | [Getting started](docs/GETTING_STARTED.md)                                           |
+| See the workflow before trying it             | [Visual walkthrough](docs/WORKFLOWS.md)                                              |
+| Find a command or understand a failure        | [CLI reference](docs/CLI.md) · [Troubleshooting](docs/TROUBLESHOOTING.md)            |
+| Replay captured responses or repair a locator | [Recorded API replay](docs/NETWORK_REPLAY.md) · [Replay diagnostics](docs/REPLAY.md) |
+| Configure privacy for my project              | [Redaction and custom rules](docs/REDACTION.md)                                      |
+| Connect an agent or CI job                    | [Agent, MCP, and CI workflows](docs/AGENT_WORKFLOWS.md)                              |
+| Build an integration                          | [Plugin API](docs/PLUGINS.md) · [Artifact specification](docs/spec/0.2.md)           |
+| Contribute or prepare a release               | [Contributing](CONTRIBUTING.md) · [Release guide](docs/RELEASING.md)                 |
 
-The [Release workflow](https://github.com/leracherry/tracecase/actions/workflows/release.yml) builds and tests an installable CLI tarball, unpacked Chrome extension ZIP, and local viewer ZIP with checksums. Manual runs rehearse packaging; matching version tags create draft releases after all checks pass. Publishing remains an explicit maintainer step.
+## Scope and privacy
 
-See [release preparation and installation](docs/RELEASING.md), [release notes](docs/RELEASE_NOTES.md), and [changelog](CHANGELOG.md).
+Capture supports top-frame HTTP(S) pages, common semantic controls, SPA history changes, and document navigation. Enhanced mode captures fetch/XHR metadata and bounded JSON/form bodies. Frames, shadow-DOM action targeting, WebSockets, binary bodies, and imported authentication state are not supported. Visual replay blocks remote assets, so appearance can differ from the original page.
 
-## Local viewer
+Redaction runs before storage, but arbitrary text can still contain sensitive data. Review recordings before sharing. Use disposable local or staging environments: replay performs real actions, and live requests can change application state. Read the [security policy](SECURITY.md), [permissions](docs/PERMISSIONS.md), and [supported browser matrix](docs/BROWSER_COMPATIBILITY.md).
 
-`open` serves the built viewer on a random loopback port and opens your browser. It does not upload evidence. Press Ctrl+C to stop the server. Use `--no-browser` to print the URL without launching a browser. The viewer also accepts file selection and drag/drop.
-
-```sh
-npm run dev -w @tracecase/viewer
-```
-
-## Development
+## Development and project status
 
 ```sh
 npm run check
 npm test
-npm run schema
 ```
 
-Tests build the production extension/viewer, replay 20 captured checkout variations, exercise real MV3 standard/enhanced capture through navigation, export files and replay them, verify privacy and size limits, inspect malicious artifacts in the local viewer, validate advanced replay/repair against actual React, Vue and Svelte fixtures, reproduce captured failures against a changed backend with recorded APIs, inspect reports and export handoffs on desktop/mobile, execute generated regression tests before/after a fix, and exercise MCP and plugins. CI also checks live/recorded replay in Chromium, Firefox and WebKit. Enhanced-mode browser tests pregrant the optional debugger permission in a temporary test manifest; the shipped extension requests it interactively.
+CI checks Node 22/24, browser capture, privacy boundaries, generated tests, MCP, and replay in Chromium/Firefox/WebKit. It also builds release archives and installs the CLI package into a clean project. See [development setup](CONTRIBUTING.md) and [architecture](docs/ARCHITECTURE.md).
 
-| Area                      | Responsibility                                                   |
-| ------------------------- | ---------------------------------------------------------------- |
-| apps/extension            | WXT Manifest V3 popup, overlay, persistent capture, review       |
-| apps/viewer               | React/Vite inspector, timeline and sandboxed rrweb visual replay |
-| packages/schema           | Runtime validation and published JSON Schema                     |
-| packages/artifact         | Bounded ZIP packaging, integrity checks, legacy JSON support     |
-| packages/capture          | Semantic click/fill/select/key and navigation capture            |
-| packages/redaction        | Private fields, credentials, JSON/form fields, URL redaction     |
-| packages/recorder         | Original Playwright recorder                                     |
-| packages/network-fixtures | Captured API response matching, routing and coverage             |
-| packages/ui               | Shared teal/mint interface tokens                                |
-| packages/replay           | Executable playback, locator fallback, failure verification      |
-| packages/cli              | Record, open, inspect, run, verify                               |
+Source builds are available now. Public registry/store publication and Firefox/Safari capture remain future work. Follow the [roadmap](docs/ROADMAP.md), [changelog](CHANGELOG.md), and [release notes](docs/RELEASE_NOTES.md).
 
-## Compatibility and extensibility
-
-Capture uses the Chromium extension. Executable replay also supports `--browser firefox` and `--browser webkit`; install those browsers with Playwright first. See the [tested compatibility matrix and capture research](docs/BROWSER_COMPATIBILITY.md).
-
-The [artifact specification](docs/spec/0.2.md) and [schema](docs/tracecase.schema.json) support third-party readers. Trusted local plugins can redact/enrich artifacts or adapt replay without editing the capture engine. Plugins are selected explicitly with `--plugin` and never loaded from recordings.
-
-## Supported scope
-
-Chromium top-frame HTTP(S) pages, including ordinary SPA history changes and document navigation. Locators use test IDs, accessible roles/names, labels, and placeholders. Unsupported targets are reported as capture gaps. The key recorder supports Enter, Escape, Tab, and arrow keys.
-
-Enhanced mode captures fetch/XHR request metadata, response status/timing, and bounded JSON/form bodies. Other text, binary bodies, media, canvas, iframe capture, shadow-DOM action targeting, and full redirect chains are not supported. Screenshots are opt-in; inputs/private selectors are masked, but other visible data requires review. Styles referenced from external stylesheets are not fetched during replay, so visual fidelity can differ.
-
-Automatic redaction is conservative but cannot identify every secret in arbitrary text. Use local/staging environments and review recordings before sharing. See [security](SECURITY.md), [permissions](docs/PERMISSIONS.md), [format](docs/TRACECASE_FORMAT.md), and [roadmap](docs/ROADMAP.md).
-
-MIT licensed. See [contributing](CONTRIBUTING.md) the [brand guide](docs/BRAND.md), and [interface design](docs/DESIGN.md).
+Licensed under [MIT](LICENSE). The supplied teal-and-mint identity is documented in the [brand guide](docs/BRAND.md).

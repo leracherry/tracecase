@@ -28,7 +28,9 @@
     "release:check": "node scripts/releases/check.mjs",
     "release:pack": "node scripts/releases/pack.mjs",
     "release:smoke": "node scripts/releases/smoke.mjs",
-    "build:export": "node scripts/build-export-runtime.mjs"
+    "build:export": "node scripts/build-export-runtime.mjs",
+    "docs:check": "node scripts/docs/check-links.mjs",
+    "docs:screenshots": "node scripts/docs/screenshots.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",

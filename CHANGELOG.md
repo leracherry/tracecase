@@ -2,6 +2,8 @@
 
 ## 0.1.0-alpha.1 — prepared
 
+- Restructure the README and docs around first use, add five real workflow screenshots, contribution templates, and CI checks for local documentation links.
+
 - Add local browser privacy settings for sensitive fields and private page elements, applied before storage and retained across navigation for each recording.
 - Refine shared spacing, typography, panel/control radii, input contrast and 44px controls across the viewer and popup.
 - Improve empty states, drag-and-drop feedback, keyboard navigation, privacy links, filter resets and recording-action feedback; verify responsive layouts from 320px to 1440px.

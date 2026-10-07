@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible capture, replay, export, or interface problem.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Use synthetic examples. Do not attach secrets or private recordings. For vulnerabilities, follow SECURITY.md."
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Explain the observed behavior and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Prefer the demo or a minimal synthetic app. Include the command or UI workflow.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: TraceCase version or commit, OS, Node version, browser, and standard or enhanced capture mode.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Reviewed logs or screenshots
+      description: Optional. Remove personal data, credentials, internal URLs, and private evidence before sharing.

@@ -1,0 +1,23 @@
+name: Feature request
+description: Propose a focused improvement to the workflow.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe your workflow and what prevents you from completing it.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Explain the outcome and any alternatives you have tried.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Compatibility or privacy considerations
+      description: Optional. Which browsers, integrations, or kinds of evidence are involved?

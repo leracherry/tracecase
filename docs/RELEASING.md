@@ -4,7 +4,7 @@ The prepared version is `0.1.0-alpha.1`. Releases are GitHub draft releases, wit
 
 ## What CI checks
 
-Pushes to `main`, pull requests, and the reusable workflow run on pinned Ubuntu 24.04 with Node 22 and 24. Each job installs locked dependencies and Chromium, Firefox, and WebKit, validates versions, type-checks, builds the extension/viewer/framework fixtures, runs browser tests, and checks the generated schema.
+Pushes to `main`, pull requests, and the reusable workflow run on pinned Ubuntu 24.04 with Node 22 and 24. Each job installs locked dependencies and Chromium, Firefox, and WebKit, validates documentation links and versions, type-checks, builds the extension/viewer/framework fixtures, runs browser tests, and checks the generated schema.
 
 The Node 22 job also builds release archives and installs the CLI tarball into a clean temporary project. The smoke test validates artifacts, exports a Playwright test and agent context, connects an MCP client, checks public module entrypoints, reproduces the demo with live and recorded APIs, writes reports, opens its bundled viewer, and validates archive entrypoints/checksums. The Node 22 job also exercises the reusable artifact verification action against the demo. CI uploads the tested `release-bundle` artifact for 14 days.
 

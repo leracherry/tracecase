@@ -22,7 +22,7 @@ jobs:
           persist-credentials: false
       - name: Require tagged commit on main
         run: git merge-base --is-ancestor HEAD origin/main
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: release-bundle
           path: release

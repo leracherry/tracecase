@@ -1,3 +1,4 @@
+import { browser as chrome } from "wxt/browser";
 import { defineBackground } from "wxt/utils/define-background";
 import {
   artifactSchema,
@@ -248,7 +249,11 @@ export default defineBackground(() => {
               session.artifact.evidence.capabilities.warnings.push(
                 `${ruleCount} custom privacy rules applied before saving evidence. Excluded interactions may require manual reproduction.`,
               );
-            if (message.enhanced)
+            if (import.meta.env.BROWSER === "firefox")
+              session.artifact.evidence.capabilities.warnings.push(
+                "Firefox standard capture: network metadata and response bodies are unavailable.",
+              );
+            if (message.enhanced && import.meta.env.BROWSER !== "firefox")
               try {
                 await chrome.debugger.attach({ tabId: session.tabId }, "1.3");
                 await chrome.debugger.sendCommand(

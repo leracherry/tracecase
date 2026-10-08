@@ -19,12 +19,12 @@ export function installConsoleBridge() {
     if (win.__tracecaseConsoleEnabled)
       window.dispatchEvent(
         new CustomEvent("tracecase-console", {
-          detail: { type, message: clean(message) },
+          detail: JSON.stringify({ type, message: clean(message) }),
         }),
       );
   };
-  const original = console.error;
-  console.error = function (...args: unknown[]) {
+  const original = window.console.error;
+  window.console.error = function (...args: unknown[]) {
     send(
       "console",
       args
@@ -33,7 +33,7 @@ export function installConsoleBridge() {
         )
         .join(" "),
     );
-    return original.apply(console, args);
+    return original.apply(window.console, args);
   };
   window.addEventListener("error", (event) => send("error", event.message));
   window.addEventListener("unhandledrejection", (event) =>

@@ -1,3 +1,4 @@
+import { browser as chrome } from "wxt/browser";
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {

@@ -2,6 +2,9 @@
 
 ## 0.1.0-alpha.2 — unreleased
 
+- Add Firefox standard capture, explicit capability messaging, temporary-install release bundles, and real Firefox extension validation in CI.
+- Preserve native form-value readers across visual recording sessions so Firefox batches retain actions and console evidence.
+
 - Share semantic capture and baseline privacy protection between CLI and extension recording.
 - Capture native input buttons, unmodified keyboard actions, SPA changes and document navigation in CLI recordings, preserving the session timeline across documents.
 - Avoid duplicate submission clicks after a recorded Enter key and exclude unsupported modified key chords.

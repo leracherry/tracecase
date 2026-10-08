@@ -158,6 +158,7 @@ if (
 )
   throw new Error("Rebuild extension after changing version");
 const extension = `tracecase-chrome-${version}.zip`,
+  firefox = `tracecase-firefox-${version}.zip`,
   viewer = `tracecase-viewer-${version}.zip`;
 const extensionEntries = await entries("apps/extension/.output/chrome-mv3");
 const legalEntries = {
@@ -167,6 +168,26 @@ const legalEntries = {
 await writeFile(
   join(output, extension),
   zipSync({ ...extensionEntries, ...legalEntries }, { level: 9 }),
+);
+const firefoxEntries = await entries("apps/extension/.output/firefox-mv3");
+const firefoxManifest = JSON.parse(
+  await readFile("apps/extension/.output/firefox-mv3/manifest.json", "utf8"),
+);
+if (
+  firefoxManifest.manifest_version !== 3 ||
+  firefoxManifest.permissions.includes("debugger") ||
+  firefoxManifest.optional_permissions?.includes("debugger")
+)
+  throw new Error("Invalid Firefox standard-capture manifest");
+firefoxEntries["README.txt"] = [
+  new TextEncoder().encode(
+    "Firefox temporary installation: unzip, open about:debugging#/runtime/this-firefox, select Load Temporary Add-on, then choose manifest.json. Standard capture only; no API response capture. Removed when Firefox closes.\n",
+  ),
+  { mtime },
+];
+await writeFile(
+  join(output, firefox),
+  zipSync({ ...firefoxEntries, ...legalEntries }, { level: 9 }),
 );
 const viewerEntries = await entries("apps/viewer/dist");
 viewerEntries["README.txt"] = [
@@ -187,7 +208,7 @@ await writeFile(
       version,
       commit,
       node: process.version,
-      artifacts: [tarball, extension, viewer],
+      artifacts: [tarball, extension, firefox, viewer],
       artifactFormat: ["0.1", "0.2"],
       networkReplay: ["live", "recorded"],
       replayReportVersion: "1.1",
@@ -199,6 +220,7 @@ await writeFile(
 const names = [
   tarball,
   extension,
+  firefox,
   viewer,
   "RELEASE_NOTES.md",
   "release-manifest.json",

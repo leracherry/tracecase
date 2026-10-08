@@ -119,3 +119,7 @@ npm run tracecase -- run examples/checkout-recorded.tracecase --url http://127.0
 ```
 
 Recorded mode reuses captured API responses while the frontend still loads from your running application. [Learn about API matching and coverage →](NETWORK_REPLAY.md)
+
+## Firefox standard capture
+
+The source build includes `apps/extension/.output/firefox-mv3`. Open `about:debugging#/runtime/this-firefox`, select **Load Temporary Add-on**, and choose that folder’s `manifest.json`. Reload the app tab and open TraceCase. Firefox supports standard capture; enhanced API evidence is available in Chromium. Temporary installs last until Firefox closes. See [compatibility and validation](BROWSER_COMPATIBILITY.md).

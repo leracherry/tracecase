@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "wxt build",
-    "check": "wxt prepare && tsc --noEmit"
+    "check": "wxt prepare && tsc --noEmit",
+    "build:firefox": "wxt build -b firefox --mv3"
   }
 }

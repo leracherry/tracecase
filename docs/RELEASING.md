@@ -1,6 +1,6 @@
 # Release workflow
 
-The prepared version is `0.1.0-alpha.2`. Releases are GitHub draft releases, with no npm or Chrome Web Store publishing credentials required.
+The prepared version is `0.1.0-alpha.2`. Releases are GitHub draft releases, with no npm or Chrome Web Store or Mozilla Add-ons publishing credentials required.
 
 ## What CI checks
 
@@ -43,7 +43,7 @@ git push origin v0.1.0-alpha.2
 
 The **Release** workflow validates that the tag matches the package version, reruns CI, requires the tagged commit to belong to `main`, verifies packaged checksums, and creates a draft release. Tags containing a hyphen are marked prereleases. Re-running can refresh assets on a draft but refuses to alter a published release.
 
-Only the draft job has `contents: write`; build/test jobs use read-only repository permissions. Publishing the draft remains a maintainer action in GitHub. The workflow never runs `npm publish` and never submits to the Chrome Web Store.
+Only the draft job has `contents: write`; build/test jobs use read-only repository permissions. Publishing the draft remains a maintainer action in GitHub. The workflow never runs `npm publish` and never submits to the Chrome Web Store or Mozilla Add-ons.
 
 ## Assets
 
@@ -67,3 +67,5 @@ tracecase --version
 ```
 
 For the extension, unzip it and select the extracted directory in Chrome’s **Load unpacked** dialog. For the static viewer, serve the extracted directory on localhost; opening ES modules directly with `file://` is not supported.
+
+Firefox builds are included as `tracecase-firefox-<version>.zip`. These are unsigned temporary-install bundles. Signing or store submission requires a separate distribution step. CI validates the build in standard Firefox using `npm run test:firefox:install` and `TRACECASE_FIREFOX_CAPTURE=1`.

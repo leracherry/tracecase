@@ -28,11 +28,13 @@ jobs:
       - run: npm ci
       - run: npm run docs:check
       - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npm run test:firefox:install
       - run: npm run release:check
       - run: npm run check
       - run: npm test
         env:
           TRACECASE_CROSS_BROWSER: "1"
+          TRACECASE_FIREFOX_CAPTURE: "1"
       - name: Start fixed demo for action validation
         if: matrix.node == 22
         run: TRACECASE_DEMO_FIXED=1 PORT=5199 node fixtures/demo-store/server.mjs > /tmp/tracecase-demo.log 2>&1 &

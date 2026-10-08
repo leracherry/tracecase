@@ -1,3 +1,4 @@
+import { browser as chrome } from "wxt/browser";
 import { defineContentScript } from "wxt/utils/define-content-script";
 import { record } from "rrweb";
 import { startCapture } from "../../../packages/capture/src/index.js";
@@ -55,7 +56,14 @@ export default defineContentScript({
       });
     const consoleEvent = (raw: Event) => {
       if (!stopActions) return;
-      const detail = (raw as CustomEvent).detail;
+      const payload = (raw as CustomEvent).detail;
+      if (typeof payload !== "string" || payload.length > 16384) return;
+      let detail;
+      try {
+        detail = JSON.parse(payload);
+      } catch {
+        return;
+      }
       if (
         detail &&
         ["console", "error"].includes(detail.type) &&
@@ -63,7 +71,13 @@ export default defineContentScript({
       )
         event(detail.type, detail.message);
     };
-    window.addEventListener("tracecase-console", consoleEvent);
+    // Firefox content scripts must explicitly accept synthetic page events.
+    (window.addEventListener as (...args: unknown[]) => void)(
+      "tracecase-console",
+      consoleEvent,
+      false,
+      true,
+    );
     const stop = async () => {
       stopActions?.();
       stopVisual?.();

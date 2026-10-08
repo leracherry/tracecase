@@ -21,13 +21,13 @@ for (const line of (await readFile(join(release, "SHA256SUMS"), "utf8"))
   )
     throw new Error(`Checksum mismatch: ${name}`);
 }
-for (const kind of ["chrome", "viewer"]) {
+for (const kind of ["chrome", "firefox", "viewer"]) {
   const files = unzipSync(
     new Uint8Array(
       await readFile(join(release, `tracecase-${kind}-${pkg.version}.zip`)),
     ),
   );
-  if (!files[kind === "chrome" ? "manifest.json" : "index.html"])
+  if (!files[kind === "viewer" ? "index.html" : "manifest.json"])
     throw new Error(`${kind} archive has no entrypoint`);
   if (
     Object.keys(files).some(

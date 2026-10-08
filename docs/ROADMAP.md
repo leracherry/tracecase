@@ -52,7 +52,7 @@ Bounded JSON context, escaped Markdown issue drafts, a read-only single-artifact
 
 Versioned artifact specification, machine-readable schema, packaged reader/schema/plugin APIs, explicit validated redaction/enrichment hooks and trusted replay adapters. Chromium, Firefox and WebKit replay are exercised locally and in CI. Documentation covers contributors, standalone viewer hosting and browser capture research.
 
-Remaining expansion: Firefox/Safari extension capture, browser-side third-party capture adapters, a plugin marketplace, broader real-world app coverage, and distribution decisions for public hosting/npm/store publication. The current extension remains Chromium-only. These are not represented as completed browser capture support.
+Remaining expansion: Firefox enhanced networking, Safari extension capture, browser-side third-party capture adapters, a plugin marketplace, broader real-world app coverage, and distribution decisions for public hosting/npm/store publication. Firefox standard capture is covered by milestone 11.
 
 ## Milestone 9 — browser privacy controls implemented
 
@@ -64,6 +64,10 @@ CLI and extension recording now share semantic capture and baseline privacy logi
 
 A synthetic project-settings workflow covers delayed rendering, checkbox/radio labels, native submit buttons, Enter submission, private inputs, SPA changes and document navigation. Tests replay it across Chromium, Firefox and WebKit and exercise actual MV3 extension capture. This expands realistic workflow coverage; it is not independent production-app validation. See [capture coverage](CAPTURE_COVERAGE.md).
 
-Next candidates: independent real-world app validation and Firefox standard capture. Public distribution and Safari packaging still require separate decisions and platform verification.
+## Milestone 11 — Firefox standard capture implemented
+
+Dedicated Firefox MV3 build using the shared capture engine and promise-based browser APIs, browser-specific capability messaging, a Firefox release archive with temporary-install instructions, and standard-Firefox extension validation in CI. Enhanced debugger networking remains Chromium-only. See [browser compatibility](BROWSER_COMPATIBILITY.md) for installation, validation scope and limits.
+
+Next candidates: independent real-world app validation, signed extension distribution and Safari feasibility. Public distribution and Safari packaging still require separate decisions and platform verification.
 
 No accounts, hosted storage, analytics or AI service is required for the core workflow.

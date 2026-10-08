@@ -23,7 +23,7 @@ TraceCase turns a browser bug into a portable `.tracecase` recording: actions, v
 
 _The checked-in demo, captured with the actual extension. See the [complete workflow](docs/WORKFLOWS.md)._
 
-> **Experimental alpha:** [`0.1.0-alpha.1` is available on GitHub](https://github.com/leracherry/tracecase/releases/tag/v0.1.0-alpha.1). The source checkout is preparing `0.1.0-alpha.2`; CI produces release bundles. Browser capture supports Chromium. Executable replay is tested in Chromium, Firefox, and WebKit. See [compatibility and limits](docs/BROWSER_COMPATIBILITY.md).
+> **Experimental alpha:** [`0.1.0-alpha.1` is available on GitHub](https://github.com/leracherry/tracecase/releases/tag/v0.1.0-alpha.1). The source checkout is preparing `0.1.0-alpha.2`; CI produces release bundles. Browser capture supports Chromium and Firefox standard mode from source. Executable replay is tested in Chromium, Firefox, and WebKit. See [compatibility and limits](docs/BROWSER_COMPATIBILITY.md).
 
 ## What you can do
 
@@ -38,7 +38,7 @@ _The checked-in demo, captured with the actual extension. See the [complete work
 
 ## Quick start
 
-Requires **Node.js 22.12+**, npm, Git, and a Chromium browser for extension capture. Repository access is required to clone it.
+Requires **Node.js 22.12+**, npm, Git, and a Chromium or Firefox browser for extension capture. Repository access is required to clone it.
 
 ```sh
 git clone https://github.com/leracherry/tracecase.git
@@ -86,6 +86,8 @@ For PowerShell, use `$env:TRACECASE_DEMO_FIXED="1"; npm run demo`. See the [gett
 
 Starting a new recording replaces the extension’s last temporary capture. Exported files remain yours. [Follow the screenshot walkthrough →](docs/WORKFLOWS.md)
 
+For Firefox, load `apps/extension/.output/firefox-mv3/manifest.json` as a temporary add-on through `about:debugging`. See [Firefox installation and limits](docs/BROWSER_COMPATIBILITY.md).
+
 ## Turn evidence into a regression test
 
 ![Export workbench showing test options, a source preview, and the Playwright download button](docs/assets/screenshots/export.png)
@@ -124,6 +126,6 @@ npm test
 
 CI checks Node 22/24, browser capture, privacy boundaries, generated tests, MCP, and replay in Chromium/Firefox/WebKit. It also builds release archives and installs the CLI package into a clean project. See [development setup](CONTRIBUTING.md) and [architecture](docs/ARCHITECTURE.md).
 
-Source builds are available now. Public registry/store publication and Firefox/Safari capture remain future work. Follow the [roadmap](docs/ROADMAP.md), [changelog](CHANGELOG.md), and [release notes](docs/RELEASE_NOTES.md).
+Source builds are available now. Public registry/store publication, Firefox enhanced networking and Safari capture remain future work. Follow the [roadmap](docs/ROADMAP.md), [changelog](CHANGELOG.md), and [release notes](docs/RELEASE_NOTES.md).
 
 Licensed under [MIT](LICENSE). The supplied teal-and-mint identity is documented in the [brand guide](docs/BRAND.md).

@@ -71,3 +71,7 @@ Use Prettier on the files you edited. `npm run format` formats the whole reposit
 - Format, privacy, and compatibility impacts are described.
 
 Contributions are made under the repository’s [MIT license](LICENSE).
+
+### Firefox extension checks
+
+Run `npm run test:firefox:install` to install the lockfile-pinned standard Firefox in `.releases/browsers`. Then run `TRACECASE_FIREFOX_CAPTURE=1 TRACECASE_CROSS_BROWSER=1 npm test` (set the variables with `$env:` in PowerShell). The separate browser is required to load real temporary add-ons; Playwright Firefox continues to cover executable replay. CI runs both.

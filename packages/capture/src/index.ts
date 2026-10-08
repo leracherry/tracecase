@@ -8,6 +8,7 @@ import {
   redactText,
   redactUrl,
 } from "../../redaction/src/index.js";
+let nativeValueGetters: Map<object, (() => string) | undefined> | undefined;
 export function startCapture(
   emit: (step: Step) => void,
   onGap: (message: string) => void,
@@ -22,6 +23,37 @@ export function startCapture(
   ]
     .filter(Boolean)
     .join(",");
+  // Preserve native accessors once per document, before visual recording instruments controls.
+  const valueGetters = (nativeValueGetters ??= new Map<
+    object,
+    (() => string) | undefined
+  >([
+    [
+      HTMLInputElement.prototype,
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")?.get,
+    ],
+    [
+      HTMLTextAreaElement.prototype,
+      Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, "value")
+        ?.get,
+    ],
+    [
+      HTMLSelectElement.prototype,
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")
+        ?.get,
+    ],
+  ]));
+  const controlValue = (
+    el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement,
+  ): string => {
+    const prototype =
+      el instanceof HTMLInputElement
+        ? HTMLInputElement.prototype
+        : el instanceof HTMLTextAreaElement
+          ? HTMLTextAreaElement.prototype
+          : HTMLSelectElement.prototype;
+    return valueGetters.get(prototype)?.call(el) ?? el.value;
+  };
   const time = () => Math.max(0, Date.now() - startedAt);
   const privateElement = (el: Element) =>
     !!el.closest(selector) ||
@@ -71,7 +103,7 @@ export function startCapture(
       label ||
       (["button", "link"].includes(role || "")
         ? el instanceof HTMLInputElement
-          ? (el.type === "image" ? el.alt : el.value) ||
+          ? (el.type === "image" ? el.alt : controlValue(el)) ||
             (el.type === "submit"
               ? "Submit"
               : el.type === "reset"
@@ -108,6 +140,13 @@ export function startCapture(
     if (el.closest("[data-tracecase-ignore]")) return;
     if (privateElement(el)) {
       onPrivate();
+      return;
+    }
+    if (
+      (type === "fill" || type === "select" || type === "key") &&
+      typeof value !== "string"
+    ) {
+      onGap("Interaction skipped: control value is unavailable");
       return;
     }
     const target = candidates(el);
@@ -163,13 +202,13 @@ export function startCapture(
           "color",
         ].includes(el.type))
     )
-      action("fill", el, el.value);
+      action("fill", el, controlValue(el));
   };
   const change = (event: Event) => {
     if (event.target instanceof HTMLSelectElement) {
       if (event.target.multiple)
         onGap("Interaction skipped: multiple selection is not supported");
-      else action("select", event.target, event.target.value);
+      else action("select", event.target, controlValue(event.target));
     }
     if (
       event.target instanceof HTMLInputElement &&

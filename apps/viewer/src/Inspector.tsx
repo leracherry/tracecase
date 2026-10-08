@@ -11,6 +11,7 @@ import {
   type Artifact,
 } from "../../../packages/schema/src/index.js";
 import { sanitizeVisual } from "./sanitize";
+import { CodeBlock } from "./CodeBlock";
 import { ExportWorkbench } from "./ExportWorkbench";
 import { NetworkReplay } from "./NetworkReplay";
 import "rrweb/dist/style.css";
@@ -262,7 +263,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
       )}
       <header>
         <a className="brand" href="#">
-          <img src="/tracecase-logo.png" width="32" height="32" alt="" />
+          <img src="/tracecase-logo.png" width="36" height="36" alt="" />
           TraceCase
         </a>
         <span className="local">Local inspection · no upload</span>
@@ -455,15 +456,21 @@ export function Inspector({ initial }: { initial?: Artifact }) {
             </section>
             <aside className="detail">
               <h2>Event inspector</h2>
-              <pre>
-                {selected
-                  ? JSON.stringify(selected.detail, null, 2)
-                  : "Select an event to inspect its evidence."}
-              </pre>
+              {selected ? (
+                <CodeBlock
+                  language="json"
+                  label="Event JSON"
+                  code={JSON.stringify(selected.detail, null, 2)}
+                />
+              ) : (
+                <p className="hint">Select an event to inspect its evidence.</p>
+              )}
               <details>
                 <summary>Environment & capabilities</summary>
-                <pre>
-                  {JSON.stringify(
+                <CodeBlock
+                  language="json"
+                  label="Environment JSON"
+                  code={JSON.stringify(
                     evidence
                       ? {
                           environment: evidence.environment,
@@ -473,7 +480,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
                     null,
                     2,
                   )}
-                </pre>
+                />
               </details>
             </aside>
           </section>

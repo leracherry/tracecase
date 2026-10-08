@@ -2,6 +2,8 @@
 
 ## 0.1.0-alpha.1 — prepared
 
+- Add safe colorful code previews with copy/wrap controls and companion-file selection, consistent dropdown arrow spacing, and a larger-looking transparent logo without increasing README spacing.
+
 - Restructure the README and docs around first use, add five real workflow screenshots, contribution templates, and CI checks for local documentation links.
 
 - Add local browser privacy settings for sensitive fields and private page elements, applied before storage and retained across navigation for each recording.

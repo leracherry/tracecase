@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { CodeBlock, type CodeLanguage } from "./CodeBlock";
 import { zipSync, strToU8 } from "fflate";
 import type { Artifact } from "../../../packages/schema/src/index.js";
 import { exportPlaywright } from "../../../packages/playwright-export/src/index.js";
@@ -19,6 +20,8 @@ export function ExportWorkbench({
     [url, setUrl] = useState("http://localhost:5173"),
     [notice, setNotice] = useState("");
   useEffect(() => setNotice(""), [artifact, kind, network, assertion, url]);
+  const [previewIndex, setPreviewIndex] = useState(0);
+  useEffect(() => setPreviewIndex(0), [kind, network]);
   const output = useMemo(() => {
     try {
       if (kind === "test")
@@ -48,6 +51,14 @@ export function ExportWorkbench({
       };
     }
   }, [artifact, kind, network, assertion, url]);
+  const preview = output.files[previewIndex] || output.files[0];
+  const previewLanguage: CodeLanguage = preview?.name.endsWith(".json")
+    ? "json"
+    : preview?.name.endsWith(".md")
+      ? "markdown"
+      : preview?.name.endsWith(".mjs")
+        ? "javascript"
+        : "typescript";
   function download() {
     if (!reviewed || output.error) return;
     const archive = output.files.length > 1;
@@ -107,7 +118,7 @@ export function ExportWorkbench({
           {kind === "test" ? (
             <>
               <label>
-                Check
+                Test outcome
                 <select
                   aria-label="Test assertion"
                   value={assertion}
@@ -116,10 +127,10 @@ export function ExportWorkbench({
                   }
                 >
                   <option value="expected">
-                    Expected behavior · regression test
+                    Expected behavior (regression)
                   </option>
                   <option value="observed">
-                    Recorded failure · reproduction check
+                    Recorded failure (reproduction)
                   </option>
                 </select>
               </label>
@@ -185,15 +196,31 @@ export function ExportWorkbench({
           ) : (
             <>
               <div className="panel-head">
-                <span className="hint">{output.files[0]?.name}</span>
+                {output.files.length > 1 ? (
+                  <select
+                    aria-label="Preview file"
+                    value={previewIndex}
+                    onChange={(e) => setPreviewIndex(Number(e.target.value))}
+                  >
+                    {output.files.map((file, index) => (
+                      <option key={file.name} value={index}>
+                        {file.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <span className="hint">{preview?.name}</span>
+                )}
                 <span className="hint">
                   {output.files.length}{" "}
                   {output.files.length === 1 ? "file" : "files"}
                 </span>
               </div>
-              <pre tabIndex={0} aria-label="Export preview">
-                {output.files[0]?.content}
-              </pre>
+              <CodeBlock
+                language={previewLanguage}
+                label="Export preview"
+                code={preview?.content || ""}
+              />
               {output.warnings.map((warning) => (
                 <p className="hint" key={warning}>
                   {warning}

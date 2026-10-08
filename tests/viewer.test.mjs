@@ -173,6 +173,106 @@ test(
           "request-1",
         ),
       );
+      assert.ok(await page.locator(".detail .hljs-attr").count());
+      assert.equal(
+        await page.locator(".code-content img, .code-content script").count(),
+        0,
+      );
+      await page
+        .context()
+        .grantPermissions(["clipboard-read", "clipboard-write"]);
+      await page
+        .getByRole("button", { name: "Copy Event JSON", exact: true })
+        .click();
+      assert.match(
+        await page.evaluate(() => navigator.clipboard.readText()),
+        /request-1/,
+      );
+      await page
+        .getByRole("button", { name: "Wrap lines in Event JSON" })
+        .click();
+      assert.equal(
+        await page
+          .locator(".detail pre")
+          .first()
+          .evaluate((el) => getComputedStyle(el).whiteSpace),
+        "pre",
+      );
+      const logo = await page.locator(".brand img").evaluate(async (img) => {
+        await img.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const context = canvas.getContext("2d");
+        context.drawImage(img, 0, 0);
+        const pixels = context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height,
+        ).data;
+        const middle = Math.floor(canvas.height / 2);
+        let left = canvas.width,
+          right = 0;
+        for (let x = 0; x < canvas.width; x++)
+          if (pixels[(middle * canvas.width + x) * 4 + 3] > 200) {
+            left = Math.min(left, x);
+            right = Math.max(right, x);
+          }
+        return {
+          cornerAlpha: pixels[3],
+          coverage: (right - left) / canvas.width,
+        };
+      });
+      assert.equal(logo.cornerAlpha, 0);
+      assert.ok(
+        logo.coverage > 0.8,
+        "Logo should fill its image box without excess blank canvas",
+      );
+      for (const select of await page.locator("select").all()) {
+        const style = await select.evaluate((el) => ({
+          padding: parseFloat(getComputedStyle(el).paddingRight),
+          position: getComputedStyle(el).backgroundPosition,
+        }));
+        assert.ok(style.padding >= 44);
+        assert.match(style.position, /14px/);
+      }
+      const contrast = await page
+        .getByLabel("Event JSON", { exact: true })
+        .evaluate((pre) => {
+          const luminance = (rgb) =>
+            rgb
+              .map((value) => {
+                const n = value / 255;
+                return n <= 0.04045 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4;
+              })
+              .reduce(
+                (sum, value, index) =>
+                  sum + value * [0.2126, 0.7152, 0.0722][index],
+                0,
+              );
+          const background = luminance([248, 250, 251]);
+          return [
+            ...new Set(
+              [...pre.querySelectorAll("span")].map(
+                (span) => getComputedStyle(span).color,
+              ),
+            ),
+          ].map((color) => {
+            const foreground = luminance(
+              color.match(/\d+/g).slice(0, 3).map(Number),
+            );
+            return (
+              (Math.max(background, foreground) + 0.05) /
+              (Math.min(background, foreground) + 0.05)
+            );
+          });
+        });
+      assert.ok(contrast.length >= 3);
+      assert.ok(
+        contrast.every((ratio) => ratio >= 4.5),
+        "Syntax colors must retain readable contrast",
+      );
       const coverageReport = {
         format: "tracecase-replay-report",
         version: "1.1",
@@ -300,6 +400,7 @@ test(
           "Updated expected behavior",
         ),
       );
+      assert.ok(await page.locator(".export-preview .hljs-keyword").count());
       await page.getByLabel("Test networking").selectOption("recorded");
       assert.equal(
         await page
@@ -308,6 +409,7 @@ test(
         true,
       );
       await page.getByLabel("Export format").selectOption("context");
+      assert.ok(await page.locator(".export-preview .hljs-attr").count());
       const contextDownload = page.waitForEvent("download");
       await page
         .getByRole("button", { name: "Download agent context" })
@@ -419,6 +521,26 @@ test(
         path: join(tmpdir(), "tracecase-polished-mobile.png"),
         fullPage: true,
       });
+      await page.getByLabel("Open artifact").setInputFiles({
+        name: "recorded.tracecase",
+        mimeType: "application/zip",
+        buffer: await readFile(
+          new URL("../examples/checkout-recorded.tracecase", import.meta.url),
+        ),
+      });
+      await page.getByLabel("Test networking").selectOption("recorded");
+      await page
+        .getByLabel("Preview file")
+        .selectOption({ label: "recording.fixtures.json" });
+      assert.ok(await page.locator(".export-preview .hljs-attr").count());
+      assert.match(
+        await page.getByLabel("Export preview", { exact: true }).textContent(),
+        /network/,
+      );
+      await page
+        .getByLabel("Preview file")
+        .selectOption({ label: "recording.network.mjs" });
+      assert.ok(await page.locator(".export-preview .hljs-keyword").count());
     } finally {
       child.kill("SIGINT");
       await browser.close();

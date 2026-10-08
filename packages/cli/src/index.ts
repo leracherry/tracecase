@@ -36,7 +36,7 @@ const help = `TraceCase — a bug is a runnable artifact.
   mcp <file>
   Optional: --plugin <local-module.mjs> (repeatable); test --editor vscode|cursor
 Record opens Chromium. Reproduce the bug, then press Enter in this terminal.
-V0 captures top-frame click/fill/select actions. No account or backend required.`;
+Captures top-frame click/fill/select/key actions and navigation. No account or backend required.`;
 async function main() {
   const [command, arg, ...args] = process.argv.slice(2);
   if (command === "--version") {
@@ -155,7 +155,9 @@ async function main() {
       const page = await browser.newPage({
         viewport: { width: 1280, height: 800 },
       });
-      const steps = await attachRecorder(page);
+      const steps = await attachRecorder(page, (message) =>
+        console.error(`\n${message}`),
+      );
       await page.goto(url.href);
       await rl.question(
         "Recording. Reproduce the bug, then press Enter to stop. ",

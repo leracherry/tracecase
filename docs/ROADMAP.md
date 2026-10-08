@@ -1,6 +1,6 @@
 # Implementation roadmap
 
-Based on the supplied research and product plan. TraceCase remains a working name; this is an experimental implementation, not a public launch.
+Based on the supplied research and product plan. TraceCase has a public experimental alpha on GitHub; broader adoption and store distribution remain future work.
 
 ## Milestone 0 — feasibility implemented
 
@@ -58,6 +58,12 @@ Remaining expansion: Firefox/Safari extension capture, browser-side third-party 
 
 Local settings for additional sensitive field names and simple private-element selectors, strict bounded validation, additive built-in protection and immutable per-recording rules. Custom redaction runs before persistence across actions, DOM evidence, console errors, URLs and enhanced API data; private elements are hidden for screenshots. Actual extension tests inspect storage, exercise navigation and verify that settings changes affect only new recordings. The settings page follows the shared responsive design system.
 
-Next candidates: broader real-world app validation and Firefox standard capture. Public distribution and Safari packaging still require separate decisions and platform verification.
+## Milestone 10 — shared capture and workflow reliability implemented
+
+CLI and extension recording now share semantic capture and baseline privacy logic. Native input buttons and keyboard submission are supported without duplicate Enter-generated clicks. CLI sessions preserve navigation and a monotonic timeline across documents. Unsupported control changes surface warnings rather than incomplete actions.
+
+A synthetic project-settings workflow covers delayed rendering, checkbox/radio labels, native submit buttons, Enter submission, private inputs, SPA changes and document navigation. Tests replay it across Chromium, Firefox and WebKit and exercise actual MV3 extension capture. This expands realistic workflow coverage; it is not independent production-app validation. See [capture coverage](CAPTURE_COVERAGE.md).
+
+Next candidates: independent real-world app validation and Firefox standard capture. Public distribution and Safari packaging still require separate decisions and platform verification.
 
 No accounts, hosted storage, analytics or AI service is required for the core workflow.

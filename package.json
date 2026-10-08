@@ -1,7 +1,7 @@
 {
   "name": "tracecase-workspace",
   "private": true,
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "type": "module",
   "workspaces": [
     "packages/*",
@@ -17,10 +17,10 @@
     "demo": "node fixtures/demo-store/server.mjs",
     "tracecase": "node dist/cli/src/index.js",
     "schema": "npm run build:core && node scripts/schema.mjs",
-    "build:core": "npm run build:export && tsc -p tsconfig.json",
+    "build:core": "npm run build:export && npm run build:capture && tsc -p tsconfig.json",
     "build:extension": "npm run brand && npm run build -w @tracecase/extension",
     "build:viewer": "npm run brand && npm run build -w @tracecase/viewer",
-    "check:core": "npm run build:export && tsc -p tsconfig.json --noEmit",
+    "check:core": "npm run build:export && npm run build:capture && tsc -p tsconfig.json --noEmit",
     "format": "prettier --write .",
     "brand": "node scripts/sync-brand.mjs",
     "build:fixtures": "vite build --config fixtures/frameworks/vite.config.mjs",
@@ -30,7 +30,8 @@
     "release:smoke": "node scripts/releases/smoke.mjs",
     "build:export": "node scripts/build-export-runtime.mjs",
     "docs:check": "node scripts/docs/check-links.mjs",
-    "docs:screenshots": "node scripts/docs/screenshots.mjs"
+    "docs:screenshots": "node scripts/docs/screenshots.mjs",
+    "build:capture": "node scripts/build-capture-runtime.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",

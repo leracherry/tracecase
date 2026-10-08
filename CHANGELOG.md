@@ -1,6 +1,14 @@
 # Changelog
 
-## 0.1.0-alpha.1 — prepared
+## 0.1.0-alpha.2 — unreleased
+
+- Share semantic capture and baseline privacy protection between CLI and extension recording.
+- Capture native input buttons, unmodified keyboard actions, SPA changes and document navigation in CLI recordings, preserving the session timeline across documents.
+- Avoid duplicate submission clicks after a recorded Enter key and exclude unsupported modified key chords.
+- Report skipped file/range/color inputs and multiple selections instead of storing incomplete replay actions.
+- Validate a synthetic project-settings workflow through actual extension capture, CLI capture and Chromium/Firefox/WebKit replay.
+
+## 0.1.0-alpha.1 — released 2026-10-07
 
 - Add safe colorful code previews with copy/wrap controls and companion-file selection, consistent dropdown arrow spacing, and a larger-looking transparent logo without increasing README spacing.
 

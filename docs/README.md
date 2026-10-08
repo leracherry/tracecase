@@ -43,3 +43,7 @@ Record a browser failure, inspect its evidence, and verify the fix locally.
 The release viewer ZIP is a static application. Serve its contents on localhost or a static HTTPS host. Evidence is processed on the user’s device; the app has no upload API or analytics. HTTPS or localhost is needed for Web Crypto and secure browser APIs. Opening the files directly with `file://` is unsupported.
 
 Hosting is a separate deployment choice. Building TraceCase does not publish a website or change repository visibility. For local source development, use `npm run dev -w @tracecase/viewer`; for a recording, prefer `npm run tracecase -- open recording.tracecase`.
+
+## Capture reliability
+
+[Capture coverage](CAPTURE_COVERAGE.md) describes supported controls, navigation, privacy behavior and the workflow validation matrix.

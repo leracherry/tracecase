@@ -23,7 +23,7 @@ TraceCase turns a browser bug into a portable `.tracecase` recording: actions, v
 
 _The checked-in demo, captured with the actual extension. See the [complete workflow](docs/WORKFLOWS.md)._
 
-> **Experimental alpha:** `0.1.0-alpha.1` is being prepared. Build from source today; CI produces release bundles. Browser capture supports Chromium. Executable replay is tested in Chromium, Firefox, and WebKit. See [compatibility and limits](docs/BROWSER_COMPATIBILITY.md).
+> **Experimental alpha:** [`0.1.0-alpha.1` is available on GitHub](https://github.com/leracherry/tracecase/releases/tag/v0.1.0-alpha.1). The source checkout is preparing `0.1.0-alpha.2`; CI produces release bundles. Browser capture supports Chromium. Executable replay is tested in Chromium, Firefox, and WebKit. See [compatibility and limits](docs/BROWSER_COMPATIBILITY.md).
 
 ## What you can do
 

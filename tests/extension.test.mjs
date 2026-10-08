@@ -504,3 +504,69 @@ for (const enhanced of [false, true])
       }
     },
   );
+
+test(
+  "real MV3 captures native buttons and keyboard submission exactly once",
+  { timeout: 60000 },
+  async (t) => {
+    const { createWorkflowServer } =
+      await import("../fixtures/workflows/server.mjs");
+    const server = createWorkflowServer();
+    await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+    t.after(() => {
+      server.closeAllConnections();
+      return new Promise((resolve) => server.close(resolve));
+    });
+    const url = `http://127.0.0.1:${server.address().port}/`;
+    const extension = await launchExtension(false);
+    t.after(() => extension.close());
+    const { context, worker, id } = extension;
+    const target = await context.newPage();
+    await target.goto(url);
+    await target.waitForTimeout(300);
+    const popup = await context.newPage();
+    await popup.goto(`chrome-extension://${id}/popup.html`);
+    const tabId = await worker.evaluate(
+      async (url) =>
+        (await chrome.tabs.query({})).find((tab) => tab.url === url).id,
+      url,
+    );
+    await request(popup, {
+      type: "start",
+      tabId,
+      enhanced: false,
+      screenshots: false,
+    });
+    await target.bringToFront();
+    await target.locator("[data-tracecase-ignore]").waitFor();
+    await target.getByRole("button", { name: "Edit project" }).click();
+    await target.getByLabel("Project name").fill("Launch plan");
+    await target.getByLabel("Notify team").check();
+    await target.getByLabel("Region").selectOption("us");
+    await target.getByLabel("Project name").press("Enter");
+    await target.getByText("Saved 1 time", { exact: true }).waitFor();
+    await target.waitForTimeout(250);
+    await request(popup, { type: "stop" });
+    const artifact = artifactSchema.parse(
+      await request(popup, { type: "artifact" }),
+    );
+    assert.equal(
+      artifact.steps.filter((s) => s.type === "key" && s.value === "Enter")
+        .length,
+      1,
+    );
+    assert.equal(
+      artifact.steps.filter(
+        (s) =>
+          s.type === "click" && s.target.some((c) => c.name === "Save project"),
+      ).length,
+      0,
+    );
+    artifact.failure = {
+      observedText: "Saved 1 time",
+      expectedText: "Saved 1 time",
+    };
+    const report = await replayWithReport(artifact, { timeoutMs: 3000 });
+    assert.equal(report.status, "reproduced", JSON.stringify(report));
+  },
+);

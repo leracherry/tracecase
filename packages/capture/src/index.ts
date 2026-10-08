@@ -60,13 +60,24 @@ export function startCapture(
               ? "checkbox"
               : (el as HTMLInputElement).type === "radio"
                 ? "radio"
-                : "textbox",
+                : ["submit", "button", "reset", "image"].includes(
+                      (el as HTMLInputElement).type,
+                    )
+                  ? "button"
+                  : "textbox",
         } as Record<string, string>
       )[el.tagName];
     const name =
       label ||
       (["button", "link"].includes(role || "")
-        ? el.textContent?.trim()
+        ? el instanceof HTMLInputElement
+          ? (el.type === "image" ? el.alt : el.value) ||
+            (el.type === "submit"
+              ? "Submit"
+              : el.type === "reset"
+                ? "Reset"
+                : "")
+          : el.textContent?.trim()
         : undefined);
     if (
       role &&
@@ -117,6 +128,7 @@ export function startCapture(
               : {}),
           }),
     } as Step);
+    return true;
   };
   let lastEnter = 0;
   const click = (event: Event) => {
@@ -129,7 +141,7 @@ export function startCapture(
     const el =
       event.target instanceof Element
         ? event.target.closest(
-            "button,a,[role=button],input[type=checkbox],input[type=radio]",
+            "button,a,[role=button],input[type=checkbox],input[type=radio],input[type=submit],input[type=button],input[type=reset],input[type=image]",
           )
         : null;
     if (el) action("click", el);
@@ -139,16 +151,41 @@ export function startCapture(
     if (
       el instanceof HTMLTextAreaElement ||
       (el instanceof HTMLInputElement &&
-        !["checkbox", "radio"].includes(el.type))
+        ![
+          "checkbox",
+          "radio",
+          "file",
+          "submit",
+          "button",
+          "reset",
+          "image",
+          "range",
+          "color",
+        ].includes(el.type))
     )
       action("fill", el, el.value);
   };
   const change = (event: Event) => {
-    if (event.target instanceof HTMLSelectElement)
-      action("select", event.target, event.target.value);
+    if (event.target instanceof HTMLSelectElement) {
+      if (event.target.multiple)
+        onGap("Interaction skipped: multiple selection is not supported");
+      else action("select", event.target, event.target.value);
+    }
+    if (
+      event.target instanceof HTMLInputElement &&
+      ["file", "range", "color"].includes(event.target.type)
+    )
+      onGap("Interaction skipped: unsupported input type");
   };
   const key = (event: KeyboardEvent) => {
-    if (event.key === "Enter") lastEnter = Date.now();
+    if (
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      event.isComposing
+    )
+      return;
     if (
       event.target instanceof Element &&
       [
@@ -161,7 +198,8 @@ export function startCapture(
         "ArrowRight",
       ].includes(event.key)
     )
-      action("key", event.target, event.key);
+      if (action("key", event.target, event.key) && event.key === "Enter")
+        lastEnter = Date.now();
   };
   document.addEventListener("click", click, true);
   document.addEventListener("input", input, true);

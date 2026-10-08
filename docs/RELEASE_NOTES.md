@@ -1,8 +1,12 @@
-# TraceCase 0.1.0-alpha.1
+# TraceCase 0.1.0-alpha.2
 
-First release candidate for the local capture → inspect → replay workflow.
+Next alpha, prepared from source; not yet published. Builds on the first public alpha with shared capture and broader workflow reliability.
 
 ## Included
+
+- Shared CLI/extension semantic capture and baseline privacy policy.
+- Native input buttons, keyboard submission without duplicate clicks, and CLI SPA/document navigation with a consistent session timeline.
+- Clear skipped-control warnings and realistic project-settings capture/replay checks across three engines.
 
 - Add local browser privacy settings for sensitive fields and private page elements, applied before storage and retained across navigation for each recording.
 - Standalone Playwright regression/reproduction test exports with optional recorded fixtures.
@@ -21,9 +25,9 @@ First release candidate for the local capture → inspect → replay workflow.
 
 ## Downloads
 
-- `tracecase-0.1.0-alpha.1.tgz`: installable Node CLI with the viewer bundled.
-- `tracecase-chrome-0.1.0-alpha.1.zip`: unpack and load through Chrome’s extension developer mode.
-- `tracecase-viewer-0.1.0-alpha.1.zip`: standalone local viewer assets.
+- `tracecase-0.1.0-alpha.2.tgz`: installable Node CLI with the viewer bundled.
+- `tracecase-chrome-0.1.0-alpha.2.zip`: unpack and load through Chrome’s extension developer mode.
+- `tracecase-viewer-0.1.0-alpha.2.zip`: standalone local viewer assets.
 - `SHA256SUMS` and `release-manifest.json`: asset integrity and source commit information.
 
 Requires Node.js 22.12+ and Playwright Chromium. Run `npx playwright install chromium` after installing the CLI tarball.

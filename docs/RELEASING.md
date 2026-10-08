@@ -1,6 +1,6 @@
 # Release workflow
 
-The prepared version is `0.1.0-alpha.1`. Releases are GitHub draft releases, with no npm or Chrome Web Store publishing credentials required.
+The prepared version is `0.1.0-alpha.2`. Releases are GitHub draft releases, with no npm or Chrome Web Store publishing credentials required.
 
 ## What CI checks
 
@@ -37,8 +37,8 @@ The Chrome manifest uses the numeric version (for example `0.1.0`) and retains t
 ## Create a release draft
 
 ```sh
-git tag -a v0.1.0-alpha.1 -m "TraceCase 0.1.0-alpha.1"
-git push origin v0.1.0-alpha.1
+git tag -a v0.1.0-alpha.2 -m "TraceCase 0.1.0-alpha.2"
+git push origin v0.1.0-alpha.2
 ```
 
 The **Release** workflow validates that the tag matches the package version, reruns CI, requires the tagged commit to belong to `main`, verifies packaged checksums, and creates a draft release. Tags containing a hyphen are marked prereleases. Re-running can refresh assets on a draft but refuses to alter a published release.
@@ -61,7 +61,7 @@ Archives include the project license and third-party license notices.
 CLI installation from a downloaded release:
 
 ```sh
-npm install --global ./tracecase-0.1.0-alpha.1.tgz
+npm install --global ./tracecase-0.1.0-alpha.2.tgz
 npx playwright install chromium
 tracecase --version
 ```

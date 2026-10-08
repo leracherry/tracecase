@@ -8,7 +8,7 @@ Examples below use an installed `tracecase` command. From a source checkout, rep
 
 | Command    | Purpose                                                    | Example                                                          |
 | ---------- | ---------------------------------------------------------- | ---------------------------------------------------------------- |
-| `record`   | Open the original interactive Playwright recorder          | `tracecase record http://localhost:5173 --out session.tracecase` |
+| `record`   | Open the interactive Playwright recorder                   | `tracecase record http://localhost:5173 --out session.tracecase` |
 | `open`     | Inspect a recording in the local viewer                    | `tracecase open session.tracecase`                               |
 | `inspect`  | Print a recording summary                                  | `tracecase inspect session.tracecase`                            |
 | `validate` | Validate artifact format and integrity                     | `tracecase validate session.tracecase`                           |
@@ -19,7 +19,7 @@ Examples below use an installed `tracecase` command. From a source checkout, rep
 | `issue`    | Write a local Markdown issue draft                         | `tracecase issue session.tracecase --out issue.md`               |
 | `mcp`      | Serve one recording through read-only MCP over stdio       | `tracecase mcp session.tracecase`                                |
 
-The original `record` command captures top-frame click/fill/select actions; use the extension for visual evidence, console capture, custom browser privacy rules, and enhanced network capture. CLI `record` requires an interactive terminal; press Enter there to finish.
+`record` shares the extension’s semantic capture engine and baseline privacy policy. It captures top-frame click/fill/select/key actions, SPA transitions and document navigation; use the extension for visual evidence, console capture, custom browser privacy rules, and enhanced network capture. CLI `record` requires an interactive terminal; press Enter there to finish. Skipped unsupported controls produce terminal warnings. Modifier-key chords, file/range/color inputs and multi-select controls are not replayable; see [capture coverage](CAPTURE_COVERAGE.md).
 
 ## Replay options
 

@@ -29,8 +29,8 @@ Executable replay launches a fresh Playwright browser against a running app. Liv
 | `apps/viewer`                           | Timeline, sanitized rrweb replay, network coverage, privacy review, and export workbench.                     |
 | `packages/schema`                       | Runtime validators and artifact types.                                                                        |
 | `packages/artifact`                     | Bounded ZIP reading/writing, integrity checks, and legacy format support.                                     |
-| `packages/capture`                      | Extension semantic actions and navigation capture.                                                            |
-| `packages/recorder`                     | Original interactive Playwright recorder.                                                                     |
+| `packages/capture`                      | Shared semantic actions, baseline privacy and SPA navigation capture.                                         |
+| `packages/recorder`                     | Playwright binding for the shared browser capture runtime and document navigation.                            |
 | `packages/redaction`                    | Built-in and configurable redaction and privacy-rule validation.                                              |
 | `packages/network-fixtures`             | API fixture eligibility, matching, routing, and coverage.                                                     |
 | `packages/replay`                       | Action execution, outcome checks, reports, and explicit locator repair.                                       |

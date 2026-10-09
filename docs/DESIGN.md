@@ -32,7 +32,7 @@ Use one border around a tool, then separators for its internal regions. Avoid re
 
 ## Interaction and states
 
-Controls have visible keyboard focus and 44px action targets. Checkbox captions enlarge their targets. Timeline selection is exposed with `aria-pressed`; empty states offer a useful next action. File pickers stay keyboard-accessible. Status and errors include words rather than relying on color alone. The popup hides configuration help while recording, keeping current settings and recording actions visible without repeating inactive-control instructions.
+Controls have visible keyboard focus and 44px action targets. Checkbox captions enlarge their targets. Timeline selection is exposed with `aria-pressed`; empty states offer a useful next action. File pickers stay keyboard-accessible. Status and errors include words rather than relying on color alone. The popup hides configuration help while recording, keeping current settings and recording actions visible without repeating inactive-control instructions. Its height is bounded to 600px with native scrolling for longer text and platform-font differences.
 
 Privacy validation identifies the affected list, associates its explanation with the input, preserves entered values and focuses the first invalid field. Hints are separate from labels so assistive technology does not announce them twice. Primary buttons change disabled/enabled state without fading mint text across a light surface. Reduced-motion preferences disable other transitions.
 

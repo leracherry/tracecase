@@ -73,7 +73,11 @@ for (const enhanced of [false, true])
         await popup.goto(`chrome-extension://${id}/popup.html`);
 
         if (!enhanced) await checkAccessibility(popup);
-        assert.ok((await popup.locator("body").boundingBox()).height <= 600);
+        const popupBox = await popup.locator("body").boundingBox();
+        assert.ok(
+          popupBox.height <= 600,
+          `Popup height ${popupBox.height} exceeds the browser limit`,
+        );
         await popup.locator("body").screenshot({
           path: join(
             tmpdir(),

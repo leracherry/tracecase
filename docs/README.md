@@ -6,16 +6,14 @@ Record a browser failure, inspect its evidence, and verify the fix locally.
 
 ## Use TraceCase
 
-| Guide                                              | What you will learn                                                                |
-| -------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| [Getting started](GETTING_STARTED.md)              | Build, install, record the demo, reproduce the failure, and verify the fix.        |
-| [Visual walkthrough](WORKFLOWS.md)                 | Follow capture, privacy settings, inspection, review, and export with screenshots. |
-| [CLI reference](CLI.md)                            | Find commands, options, defaults, and exit behavior.                               |
-| [Troubleshooting](TROUBLESHOOTING.md)              | Resolve common installation, capture, export, and replay problems.                 |
-| [Replay diagnostics and repair](REPLAY.md)         | Understand reports and explicitly repair changed locators.                         |
-| [Recorded API replay](NETWORK_REPLAY.md)           | Match captured responses and investigate coverage gaps.                            |
-| [Playwright test export](TEST_EXPORT.md)           | Generate regression tests or historical reproduction checks.                       |
-| [Agent, MCP, and CI workflows](AGENT_WORKFLOWS.md) | Prepare handoffs and integrate verification into development.                      |
+- **[Getting started](GETTING_STARTED.md)** — Install, record the demo, reproduce the failure, and verify the fix.
+- **[Visual walkthrough](WORKFLOWS.md)** — Follow the capture-to-test workflow with actual screenshots.
+- **[CLI reference](CLI.md)** — Commands, options, defaults, and exit behavior.
+- **[Troubleshooting](TROUBLESHOOTING.md)** — Resolve installation, capture, export, and replay problems.
+- **[Replay and repair](REPLAY.md)** — Read diagnostics and explicitly repair changed locators.
+- **[Recorded API replay](NETWORK_REPLAY.md)** — Match captured responses and investigate coverage gaps.
+- **[Playwright test export](TEST_EXPORT.md)** — Generate regression tests and reproduction checks.
+- **[Developer and agent workflows](AGENT_WORKFLOWS.md)** — Issue drafts, agent context, MCP, and CI verification.
 
 ## Understand the boundaries
 
@@ -30,7 +28,7 @@ Record a browser failure, inspect its evidence, and verify the fix locally.
 - [Contributing and local checks](../CONTRIBUTING.md)
 - [Plugin API](PLUGINS.md)
 - [Artifact format overview](TRACECASE_FORMAT.md), [version 0.2 specification](spec/0.2.md), and [JSON Schema](tracecase.schema.json)
-- [Interface design](DESIGN.md) and [brand guide](BRAND.md)
+- [Interface design](DESIGN.md), [UI audit](UI_UX_AUDIT.md), and [brand guide](BRAND.md)
 
 ## Follow releases
 

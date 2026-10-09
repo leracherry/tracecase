@@ -1,5 +1,7 @@
 # TraceCase artifact format
 
+[Documentation home](README.md)
+
 ## Version 0.2
 
 A `.tracecase` file is a ZIP container containing exactly:

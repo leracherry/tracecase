@@ -75,3 +75,7 @@ Contributions are made under the repository’s [MIT license](LICENSE).
 ### Firefox extension checks
 
 Run `npm run test:firefox:install` to install the lockfile-pinned standard Firefox in `.releases/browsers`. Then run `TRACECASE_FIREFOX_CAPTURE=1 TRACECASE_CROSS_BROWSER=1 npm test` (set the variables with `$env:` in PowerShell). The separate browser is required to load real temporary add-ons; Playwright Firefox continues to cover executable replay. CI runs both.
+
+### Interface changes
+
+Use [shared OpenAI foundation tokens](docs/DESIGN.md) and review the [UI audit](docs/UI_UX_AUDIT.md). Viewer and extension tests include axe checks; keep invalid, empty and mobile states covered. Refresh actual workflow images with `npm run docs:screenshots` after changing visuals.

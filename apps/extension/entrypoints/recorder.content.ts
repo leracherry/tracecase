@@ -130,10 +130,12 @@ export default defineContentScript({
       });
       overlay = document.createElement("div");
       overlay.dataset.tracecaseIgnore = "";
+      overlay.setAttribute("role", "region");
+      overlay.setAttribute("aria-label", "TraceCase recording controls");
       overlay.style.cssText =
-        "position:fixed;bottom:20px;right:20px;z-index:2147483647;background:#0d252b;color:#49dcbc;padding:12px;border-radius:12px;font:14px system-ui;display:flex;gap:12px;box-shadow:0 4px 24px #0004;";
+        "position:fixed;bottom:16px;right:16px;z-index:2147483647;max-width:calc(100vw - 32px);box-sizing:border-box;background:#ffffff;color:#0d0d0d;padding:8px 12px;border:1px solid #0000001a;border-radius:16px;font:14px/20px system-ui;display:flex;align-items:center;gap:8px;box-shadow:0 2px 8px #0000001a;";
       const label = document.createElement("span");
-      label.textContent = "● Recording";
+      label.textContent = "Recording";
       overlay.append(label);
       for (const [name, type] of [
         ["Mark bug", "mark"],
@@ -141,8 +143,14 @@ export default defineContentScript({
       ]) {
         const button = document.createElement("button");
         button.textContent = name || "";
+        button.type = "button";
         button.style.cssText =
-          "font:inherit;cursor:pointer;padding:6px 10px;border:1px solid #49dcbc55;border-radius:8px;background:#163940;color:#49dcbc";
+          "font:inherit;font-weight:500;cursor:pointer;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border:1px solid #8f8f8f;border-radius:10px;background:#ffffff;color:#0d0d0d;";
+        if (type === "stop") {
+          button.style.background = "#0d252b";
+          button.style.borderColor = "#0d252b";
+          button.style.color = "#49dcbc";
+        }
         button.onclick = async () => {
           if (type === "stop") {
             await stop();

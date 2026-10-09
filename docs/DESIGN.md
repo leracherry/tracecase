@@ -1,31 +1,49 @@
 # Interface design
 
-TraceCase follows the project owner's teal-squircle and mint-dot identity. Shared tokens live in `packages/ui/tokens.css` and are imported by the viewer, extension review and popup. The page recording overlay uses the same ink/mint palette without importing styles into the recorded app.
+[Documentation home](README.md) · [Audit and validation](UI_UX_AUDIT.md)
 
-| Role                         | Token                    | Color                 |
-| ---------------------------- | ------------------------ | --------------------- |
-| Brand ink / primary control  | `--brand-ink`            | `#0D252B`             |
-| Mint / primary control label | `--brand-mint`           | `#49DCBC`             |
-| Mint tint / selection        | `--selected`             | `#E6F7F2`             |
-| Focus and positive status    | `--positive`             | `#176B56`             |
-| Main text                    | `--text`                 | `#202123`             |
-| Supporting text              | `--muted`                | `#5F6368`             |
-| Canvas / surface             | `--canvas` / `--surface` | `#FAFAFA` / `#FFFFFF` |
+OpenAI’s public Apps SDK UI design system is the primary reference for TraceCase’s interface. The viewer, extension, privacy settings and examples share its neutral palette, platform-native fonts, typography scale, 4px spacing foundation and published radius tokens. TraceCase’s teal/mint identity is reserved for the logo and primary actions.
 
-The design adapts [OpenAI's public UI guidelines](https://developers.openai.com/apps-sdk/concepts/ui-guidelines): platform-native typography, restrained brand accents, consistent spacing, clear hierarchy, and accessible contrast. This standalone Chromium tool uses its own components and identity; it is not an OpenAI product or a ChatGPT-hosted app.
+## Foundation and provenance
 
-Use neutral reading surfaces, teal primary controls with mint labels, restrained mint selection/status accents, and semantic red/amber states with text labels. Body text stays readable rather than using bright mint on white. Controls use a visible focus ring and at least 44px height; selection is exposed with `aria-pressed`. File selectors remain keyboard-accessible. Inspectors and report tables wrap or scroll locally on narrow screens.
+`packages/ui/openai-foundations.css` derives from **@openai/apps-sdk-ui 0.2.2**. It contains the published primitive, semantic and component CSS variables. The Tailwind-only `@theme static` wrapper is converted to `:root`, and wildcard reset declarations are removed for native CSS. The MIT notice is retained in `packages/ui/OPENAI_LICENSE` and included in release notices. The application uses native semantic HTML and React; it does not ship unused SDK components or custom font downloads.
 
-Keep layouts focused on the artifact: timeline, visual evidence, event detail, API replay coverage and privacy review. Use progressive disclosure for unavailable responses and environment details. Avoid decorative gradients, oversized metrics, custom font downloads and unrelated navigation. The logo uses the owner-requested transparent derivative described in the [brand guide](BRAND.md).
+The product aliases in `packages/ui/tokens.css` map to these upstream variables:
 
-The export workbench continues the artifact workflow with expected-behavior tests, separately labelled reproduction checks, issue drafts and agent context. Previews reflect failure edits and privacy exclusions. Disabled exports explain missing assertions/private data, downloads confirm completion, and section links keep long recordings navigable.
+| Product role                     | OpenAI foundation                                                       |
+| -------------------------------- | ----------------------------------------------------------------------- |
+| Reading surface / canvas         | `--color-surface` / `--gray-50`                                         |
+| Main / supporting text           | `--color-text` / `--color-text-secondary`                               |
+| Selection / neutral hover        | `--color-background-primary-soft`                                       |
+| Decorative separator             | `--color-border`                                                        |
+| Input/control outline            | `--gray-400`                                                            |
+| Success / error / warning text   | `--color-text-success` / `--color-text-danger` / `--color-text-warning` |
+| Body / supporting / caption text | 16px / 14px / 12px                                                      |
+| Panel / control / inset radius   | `--radius-2xl` / `--control-radius-lg` / `--radius-md`                  |
+| Touch control height             | 44px (`--control-size-2xl`)                                             |
 
-Panels use a 16px corner radius, controls 10px and inset content 8px. Form borders use a stronger neutral than decorative separators. The layout caps at 1600px and adapts through tablet and mobile widths; mobile inputs use 16px text to avoid zoom on focus. Checkbox labels provide full touch targets. Focus rings, a skip link, keyboard-scrollable request tables and reduced-motion support apply throughout the inspector.
+Native controls use a stronger outline than decorative separators so they remain identifiable. Teal `#0D252B` and mint `#49DCBC` appear together on primary actions with readable contrast; mint is not used as body text on a white surface. Selection remains neutral. Syntax colors belong to recorded/generated content rather than structural UI.
 
-Empty recordings offer a file picker as well as drag-and-drop. Missing visual evidence explains the available alternatives. Opening a new recording clears timeline filters and privacy consent; clearing an empty search takes one action. Export notices reset when their inputs change. The popup prevents duplicate recording actions, reflects active capture settings and confirms bug markers.
+## Layout and reading
 
-## Developer reading surfaces
+The workspace caps at 1440px, with aligned 24px desktop gutters and consistent panel padding. Prose is constrained to approximately 68 characters per line. The timeline, visual evidence and inspector form one workspace; secondary review and export sections follow the same spacing rhythm. Tablet and mobile layouts change at 1024px and 768px. Visual replay fits the pane by default; **Actual size** preserves the recorded scale in a keyboard-scrollable viewport for reading details. Mobile controls keep 16px input text; tables and code scroll within their own regions.
 
-Code blocks share a selectable, keyboard-scrollable preview with Copy and Wrap controls. JSON, YAML, TypeScript, JavaScript, shell and Markdown use distinct syntax colors on a neutral surface. [Lowlight](https://github.com/wooorm/lowlight) supplies syntax trees; React renders only text and spans, never executable HTML from evidence. Previews are capped at 40,000 characters to keep large artifacts responsive; copying and downloading retain the full content. Export bundles expose a file selector for every companion file.
+Use one border around a tool, then separators for its internal regions. Avoid redundant nested cards, decorative gradients, oversized metric tiles and unnecessary badges. The export preview owns one border. Counts are lightweight text. Event labels show a single readable target; complete locators remain available in the inspector.
 
-Native selects retain keyboard navigation and type-ahead. A shared CSS chevron sits 14px from the right edge with 44px reserved padding, including the demo and framework examples. Forced-color mode restores the browser's native arrow. Narrow screens keep 16px form text and 44px code-toolbar touch targets.
+## Interaction and states
+
+Controls have visible keyboard focus and 44px action targets. Checkbox captions enlarge their targets. Timeline selection is exposed with `aria-pressed`; empty states offer a useful next action. File pickers stay keyboard-accessible. Status and errors include words rather than relying on color alone. The popup hides configuration help while recording, keeping current settings and recording actions visible without repeating inactive-control instructions.
+
+Privacy validation identifies the affected list, associates its explanation with the input, preserves entered values and focuses the first invalid field. Hints are separate from labels so assistive technology does not announce them twice. Primary buttons change disabled/enabled state without fading mint text across a light surface. Reduced-motion preferences disable other transitions.
+
+Code previews provide syntax colors, Copy, Wrap and companion-file selection. They render only text and spans from locally bundled Lowlight grammars. Previews are limited to 40,000 characters; copying and downloading retain the complete content. Native selects keep keyboard/type-ahead behavior, with the chevron inset 14px and 44px of reserved right padding. Forced colors restore the native arrow.
+
+The recording bar uses matching neutral surfaces, control dimensions and restrained elevation. Its styles stay local to the bar so the recorded application retains its own appearance.
+
+## References and scope
+
+- [OpenAI UI guidelines](https://developers.openai.com/plugins/concepts/ui-guidelines)
+- [Official Apps SDK UI source](https://github.com/openai/apps-sdk-ui)
+- [WCAG text contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html), [control contrast](https://www.w3.org/WAI/WCAG22/Understanding/non-text-contrast.html), [reflow](https://www.w3.org/WAI/WCAG22/Understanding/reflow.html) and [target size](https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html)
+
+TraceCase is a standalone developer tool. ChatGPT-specific widget containers and host-app branding rules do not describe its browser-extension or local-viewer packaging. GitHub controls README and documentation typography; those files use restrained native Markdown, concise tables, labelled code fences and actual product screenshots.

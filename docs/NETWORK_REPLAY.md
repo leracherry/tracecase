@@ -1,5 +1,7 @@
 # Recorded API replay
 
+[Documentation home](README.md)
+
 Recorded mode serves captured API responses while the frontend code, documents, images, fonts and styles load from the development app. This lets an old frontend failure reproduce after the backend has changed.
 
 ```sh

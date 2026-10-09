@@ -1,5 +1,7 @@
 # Capture coverage
 
+[Documentation home](README.md)
+
 CLI, Chromium and Firefox extension recording use the same semantic capture engine. Both record actions against test IDs, accessible roles/names, labels and placeholders. Private fields are excluded before actions reach storage. The extension additionally supports custom privacy rules and visual/network evidence.
 
 | Interaction                                | Behavior                                                               |

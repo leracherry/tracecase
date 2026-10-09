@@ -96,7 +96,6 @@ export function ExportWorkbench({
           <p className="eyebrow">NEXT STEP</p>
           <h2>Turn evidence into a fix</h2>
         </div>
-        <span className="status">Local export</span>
       </div>
       <div className="export-layout">
         <div className="export-controls">
@@ -120,24 +119,25 @@ export function ExportWorkbench({
               <label>
                 Test outcome
                 <select
-                  aria-label="Test assertion"
+                  aria-label="Test outcome"
                   value={assertion}
                   onChange={(e) =>
                     setAssertion(e.target.value as "expected" | "observed")
                   }
                 >
-                  <option value="expected">
-                    Expected behavior (regression)
-                  </option>
-                  <option value="observed">
-                    Recorded failure (reproduction)
-                  </option>
+                  <option value="expected">Expected behavior</option>
+                  <option value="observed">Recorded failure</option>
                 </select>
               </label>
+              <p className="hint outcome-hint">
+                {assertion === "expected"
+                  ? "Checks the fix with a regression test."
+                  : "Checks that the recorded failure is reproduced."}
+              </p>
               <label>
                 API responses
                 <select
-                  aria-label="Test networking"
+                  aria-label="API responses"
                   value={network}
                   onChange={(e) =>
                     setNetwork(e.target.value as "live" | "recorded")
@@ -150,7 +150,7 @@ export function ExportWorkbench({
               <label>
                 Development URL
                 <input
-                  aria-label="Test base URL"
+                  aria-label="Development URL"
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   spellCheck={false}
@@ -199,6 +199,7 @@ export function ExportWorkbench({
                 {output.files.length > 1 ? (
                   <select
                     aria-label="Preview file"
+                    title={preview?.name}
                     value={previewIndex}
                     onChange={(e) => setPreviewIndex(Number(e.target.value))}
                   >

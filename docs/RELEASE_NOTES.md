@@ -1,5 +1,7 @@
 # TraceCase 0.1.0-alpha.2
 
+[Documentation home](README.md)
+
 Next alpha, prepared from source; not yet published. Builds on the first public alpha with shared capture and broader workflow reliability.
 
 ## Included

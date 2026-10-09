@@ -1,0 +1,95 @@
+@import "./tokens.css";
+/* Native examples share the product's official OpenAI foundation tokens. */
+body {
+  max-width: 720px;
+  margin: 40px auto;
+  padding: 24px;
+}
+main {
+  min-width: 0;
+}
+small {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+h1 {
+  font-size: var(--font-heading-xl-size);
+  line-height: 1.2;
+  font-weight: 600;
+  margin: 12px 0 20px;
+}
+aside {
+  margin: 20px 0 24px;
+  max-width: var(--reading-width);
+  color: var(--muted);
+}
+form {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+form label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+form button[type="submit"] {
+  margin-top: 8px;
+  background: var(--brand-ink);
+  border-color: var(--brand-ink);
+  color: var(--brand-mint);
+}
+form button[type="submit"]:hover {
+  background: var(--brand-hover);
+}
+input:not([type="checkbox"]):not([type="radio"]),
+select {
+  width: 100%;
+}
+button + a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-left: 12px;
+  padding: 8px 0;
+}
+#status,
+form p[role="status"],
+output {
+  margin: 0;
+  font-size: 14px;
+}
+#status:not(:empty),
+form p[role="status"]:not(:empty),
+output:not(:empty) {
+  padding-top: 12px;
+}
+@media (max-width: 768px) {
+  body {
+    margin: 16px auto;
+    padding: 16px;
+  }
+  h1 {
+    font-size: var(--font-heading-lg-size);
+  }
+  form {
+    padding: 20px 16px;
+  }
+  input,
+  select {
+    font-size: 16px;
+  }
+}
+
+[data-state="error"] {
+  color: var(--danger);
+}
+[data-state="success"] {
+  color: var(--positive);
+}

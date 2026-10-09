@@ -1,5 +1,7 @@
 # Executable replay
 
+[Documentation home](README.md)
+
 TraceCase runs semantic actions against a real app with live networking by default or recorded API fixtures. A new isolated Chromium context is used for each run; cookies and storage from the recording are not imported.
 
 ## Run, verify, report

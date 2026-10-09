@@ -60,6 +60,9 @@ for (const [location, info] of Object.entries(lock.packages)) {
     }
   }
 }
+notices.push(
+  `## OpenAI Apps SDK UI foundation tokens 0.2.2\n\n${await readFile("packages/ui/OPENAI_LICENSE", "utf8")}\n`,
+);
 const noticeText = notices.join("\n");
 await writeFile(join(stage, "THIRD_PARTY_NOTICES.md"), noticeText);
 const dependencies = Object.fromEntries(

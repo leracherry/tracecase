@@ -1,5 +1,7 @@
 # Implementation roadmap
 
+[Documentation home](README.md)
+
 Based on the supplied research and product plan. TraceCase has a public experimental alpha on GitHub; broader adoption and store distribution remain future work.
 
 ## Milestone 0 — feasibility implemented

@@ -1,5 +1,7 @@
 # Browser compatibility and capture research
 
+[Documentation home](README.md)
+
 | Capability                     | Chromium                              | Firefox                               | WebKit                                |
 | ------------------------------ | ------------------------------------- | ------------------------------------- | ------------------------------------- |
 | Executable live replay         | Tested                                | Tested                                | Tested                                |

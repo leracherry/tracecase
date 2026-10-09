@@ -2,6 +2,8 @@
 
 ## 0.1.0-alpha.2 — unreleased
 
+- Align product and examples with official OpenAI foundation tokens; improve readability, control states, spacing, validation, event labels and responsive layouts. Add automated accessibility checks and refresh documentation screenshots.
+
 - Add Firefox standard capture, explicit capability messaging, temporary-install release bundles, and real Firefox extension validation in CI.
 - Preserve native form-value readers across visual recording sessions so Firefox batches retain actions and console evidence.
 

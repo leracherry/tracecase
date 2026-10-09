@@ -38,6 +38,9 @@ export function Inspector({ initial }: { initial?: Artifact }) {
     [includeConsole, setIncludeConsole] = useState(true);
   const [downloadNotice, setDownloadNotice] = useState("");
   const [hasPlayer, setHasPlayer] = useState(false);
+  const [actualSize, setActualSize] = useState(false);
+  const actualSizeRef = useRef(false);
+  const fitPlayer = useRef<(() => void) | undefined>(undefined);
   const [dragging, setDragging] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const replayRoot = useRef<HTMLDivElement>(null),
@@ -74,6 +77,8 @@ export function Inspector({ initial }: { initial?: Artifact }) {
     setObserved(artifact?.failure?.observedText || "");
     setExpected(artifact?.failure?.expectedText || "");
     setReviewed(false);
+    setActualSize(false);
+    actualSizeRef.current = false;
   }, [artifact]);
   useEffect(() => {
     const root = replayRoot.current;
@@ -86,11 +91,14 @@ export function Inspector({ initial }: { initial?: Artifact }) {
     const fit = () => {
       const wrapper = root.querySelector<HTMLElement>(".replayer-wrapper");
       if (wrapper && artifact) {
-        const scale = Math.min(1, root.clientWidth / artifact.viewport.width);
+        const scale = actualSizeRef.current
+          ? 1
+          : Math.min(1, root.clientWidth / artifact.viewport.width);
         wrapper.style.transform = `scale(${scale})`;
         root.style.height = `${artifact.viewport.height * scale}px`;
       }
     };
+    fitPlayer.current = fit;
     const resize = new ResizeObserver(fit);
     resize.observe(root);
     try {
@@ -105,6 +113,8 @@ export function Inspector({ initial }: { initial?: Artifact }) {
         },
       );
       player.current.pause(0);
+      const frame = root.querySelector("iframe");
+      if (frame) frame.title = "Recorded page preview";
       setHasPlayer(true);
       fit();
     } catch (error) {
@@ -112,6 +122,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
     }
     return () => {
       resize.disconnect();
+      fitPlayer.current = undefined;
       player.current?.destroy();
       player.current = undefined;
     };
@@ -124,7 +135,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
       message:
         step.type === "navigation"
           ? `Navigate ${step.url}`
-          : `${step.type} · ${step.target.map((t) => (t.kind === "role" ? t.name : t.value)).join(" / ")}`,
+          : `${step.type[0]!.toUpperCase() + step.type.slice(1)} · ${step.target.find((t) => t.kind === "role")?.name || step.target.find((t) => t.kind === "label")?.value || (step.target[0]!.kind === "role" ? step.target[0]!.name : step.target[0]!.value)}`,
       detail: step,
     }));
     for (const event of evidence?.events || [])
@@ -326,8 +337,10 @@ export function Inspector({ initial }: { initial?: Artifact }) {
                 <small>requests</small>
               </strong>
               <strong>
-                {evidence?.events.filter((e) => e.type === "error").length || 0}
-                <small>errors</small>
+                {evidence?.events.filter((e) =>
+                  ["error", "console"].includes(e.type),
+                ).length || 0}
+                <small>console errors</small>
               </strong>
             </div>
           </section>
@@ -351,8 +364,12 @@ export function Inspector({ initial }: { initial?: Artifact }) {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
+              <label className="filter-label" htmlFor="timeline-filter">
+                Event type
+              </label>
               <select
-                aria-label="Filter timeline"
+                id="timeline-filter"
+                aria-label="Event type"
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
               >
@@ -365,7 +382,21 @@ export function Inspector({ initial }: { initial?: Artifact }) {
                   "marker",
                   "gap",
                 ].map((value) => (
-                  <option key={value}>{value}</option>
+                  <option key={value} value={value}>
+                    {
+                      (
+                        {
+                          all: "All events",
+                          action: "Actions",
+                          network: "API requests",
+                          console: "Console",
+                          error: "Errors",
+                          marker: "Bug markers",
+                          gap: "Skipped capture",
+                        } as Record<string, string>
+                      )[value]
+                    }
+                  </option>
                 ))}
               </select>
               <div className="rows">
@@ -385,7 +416,22 @@ export function Inspector({ initial }: { initial?: Artifact }) {
                     onClick={() => choose(row)}
                   >
                     <time>{(row.time / 1000).toFixed(2)}s</time>
-                    <span>{row.message}</span>
+                    <span className="row-body">
+                      <span className="row-kind">
+                        {(
+                          {
+                            action: "Action",
+                            network: "API request",
+                            console: "Console error",
+                            error: "Page error",
+                            marker: "Bug marker",
+                            gap: "Capture skipped",
+                            navigation: "Navigation",
+                          } as Record<string, string>
+                        )[row.type] || row.type}
+                      </span>
+                      <span className="row-message">{row.message}</span>
+                    </span>
                   </button>
                 ))}
                 {!visible.length && (
@@ -412,31 +458,50 @@ export function Inspector({ initial }: { initial?: Artifact }) {
             <section className="visual">
               <div className="panel-head">
                 <h2>Visual replay</h2>
-                <button
-                  disabled={!hasPlayer}
-                  onClick={() => {
-                    if (!player.current) return;
-                    if (playing) player.current.pause();
-                    else {
-                      const current = player.current.getCurrentTime();
-                      player.current.play(
-                        current >= player.current.getMetaData().totalTime
-                          ? 0
-                          : current,
-                      );
-                    }
-                    setPlaying(!playing);
-                  }}
-                >
-                  {playing ? "Pause" : "Play"}
-                </button>
+                <div className="replay-actions">
+                  <button
+                    hidden={!hasPlayer}
+                    aria-label="Actual size for visual replay"
+                    aria-pressed={actualSize}
+                    onClick={() => {
+                      const next = !actualSize;
+                      actualSizeRef.current = next;
+                      setActualSize(next);
+                      fitPlayer.current?.();
+                    }}
+                  >
+                    Actual size
+                  </button>
+                  <button
+                    hidden={!hasPlayer}
+                    onClick={() => {
+                      if (!player.current) return;
+                      if (playing) player.current.pause();
+                      else {
+                        const current = player.current.getCurrentTime();
+                        player.current.play(
+                          current >= player.current.getMetaData().totalTime
+                            ? 0
+                            : current,
+                        );
+                      }
+                      setPlaying(!playing);
+                    }}
+                  >
+                    {playing ? "Pause" : "Play"}
+                  </button>
+                </div>
               </div>
-              <div className="player" ref={replayRoot} hidden={!hasPlayer} />
+              <div
+                className="player"
+                ref={replayRoot}
+                hidden={!hasPlayer}
+                role="region"
+                aria-label="Visual replay viewport"
+                tabIndex={hasPlayer ? 0 : undefined}
+              />
               {!hasPlayer && (
                 <div className="replay-empty">
-                  <span className="empty-symbol" aria-hidden="true">
-                    ▷
-                  </span>
                   <h3>No visual replay available</h3>
                   <p>
                     Use the timeline to inspect captured actions and requests.
@@ -512,6 +577,7 @@ export function Inspector({ initial }: { initial?: Artifact }) {
                 · {evidence?.privacy.excludedInputs || 0} private input events
                 excluded.
               </p>
+              <h2>Review before sharing</h2>
               <p>
                 Review input values, URLs, visible page text, console messages,
                 screenshots and API payloads before sharing. Automatic redaction

@@ -1,5 +1,7 @@
 # TraceCase identity
 
+[Documentation home](README.md)
+
 The logo is the project owner’s dark teal squircle with a mint dot near its lower-left corner.
 
 The canonical asset is [tracecase-logo.png](assets/tracecase-logo.png). It is now a transparent, closely framed derivative of the supplied `Minimal Teal Squircle with Mint Dot.png`, as requested by the owner. Preserve the squircle silhouette, mint dot placement, and teal/mint identity. Do not restore a white background or large empty canvas.
@@ -8,7 +10,7 @@ The README retains its existing 112px image box and spacing; removing the surrou
 
 `npm run brand` copies the canonical asset into application public directories before building. Those copies are not separate sources of truth. Release packages include the built assets.
 
-The interface uses dark teal `#0D252B` and mint `#49DCBC`, with neutral reading surfaces. See [interface design](DESIGN.md).
+The interface follows OpenAI’s neutral foundation tokens. Dark teal `#0D252B` and mint `#49DCBC` are reserved for the logo and primary actions. See [interface design](DESIGN.md).
 
 ## Asset provenance
 

@@ -1,18 +1,19 @@
 import { createServer } from "node:http";
 // Synthetic project-settings flow: delayed render, native controls, SPA + document navigation.
+import { exampleStyles } from "../example-styles.mjs";
 export function createWorkflowServer() {
   return createServer((req, res) => {
     res.setHeader("content-type", "text/html; charset=utf-8");
     if (req.url === "/done") {
       res.end(
-        '<!doctype html><title>Saved project</title><h1>Project saved</h1><label>Search projects<input placeholder="Search projects"></label>',
+        `<!doctype html><html lang="en" data-theme="light"><style>${exampleStyles()}</style><title>Saved project</title><h1>Project saved</h1><label>Search projects<input placeholder="Search projects"></label>`,
       );
       return;
     }
-    res.end(`<!doctype html><html><head><title>Project settings fixture</title></head><body>
-      <h1>Project settings</h1>
+    res.end(`<!doctype html><html lang="en" data-theme="light"><head><meta name="viewport" content="width=device-width, initial-scale=1"><style>${exampleStyles()}</style><title>Project settings fixture</title></head><body>
+      <main><h1>Project settings</h1>
       <input type="button" value="Edit project" id="edit">
-      <main id="panel"></main>
+      <div id="panel"></div></main>
       <script>
         document.querySelector('#edit').onclick = () => {
           history.pushState({}, '', '/settings');

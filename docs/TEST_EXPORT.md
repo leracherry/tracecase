@@ -1,5 +1,7 @@
 # Recording to regression test
 
+[Documentation home](README.md)
+
 ```sh
 tracecase test recording.tracecase --out tests/checkout.spec.ts --url http://localhost:5173
 ```

@@ -1,5 +1,7 @@
 # Release workflow
 
+[Documentation home](README.md)
+
 The prepared version is `0.1.0-alpha.2`. Releases are GitHub draft releases, with no npm or Chrome Web Store or Mozilla Add-ons publishing credentials required.
 
 ## What CI checks

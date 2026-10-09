@@ -1,7 +1,7 @@
 import { browser as chrome } from "wxt/browser";
 import "./style.css";
 const root = document.querySelector("#app")!;
-root.innerHTML = `<div class="identity"><img src="/tracecase-logo.png" width="36" height="36" alt=""><small>TraceCase</small></div><h1>Record a runnable bug.</h1><p>Capture stays on this device. Passwords and private fields are excluded.</p><label><input type="checkbox" id="enhanced"> Enhanced network capture</label><p class="hint">Uses Chrome’s debugger permission. Chrome displays a debugging banner.</p><label><input type="checkbox" id="screenshots"> Include screenshots</label><p class="hint">Inputs are masked; other visible content may still be sensitive. Review before exporting.</p><button id="start">Start recording</button><button id="mark" hidden>Mark bug</button><button id="stop" hidden>Stop & review</button><button id="review">Review last recording</button><p id="status" role="status"></p><button id="privacy">Privacy settings</button>`;
+root.innerHTML = `<div class="identity"><img src="/tracecase-logo.png" width="36" height="36" alt=""><small>TraceCase</small></div><h1>Record a runnable bug.</h1><p>Capture stays on this device. Passwords and private fields are excluded.</p><label><input type="checkbox" id="enhanced" aria-describedby="enhanced-help"> Enhanced network capture</label><p class="hint" id="enhanced-help">Uses Chrome’s debugger permission. Chrome displays a debugging banner.</p><label><input type="checkbox" id="screenshots" aria-describedby="screenshots-help"> Include screenshots</label><p class="hint" id="screenshots-help">Inputs are masked; other visible content may still be sensitive. Review before exporting.</p><button id="start">Start recording</button><button id="mark" hidden>Mark bug</button><button id="stop" hidden>Stop & review</button><button id="review">Review last recording</button><p id="status" role="status"></p><button id="privacy">Privacy settings</button>`;
 const firefox = import.meta.env.BROWSER === "firefox";
 const enhancedInput = document.querySelector<HTMLInputElement>("#enhanced")!;
 if (firefox) {
@@ -30,6 +30,8 @@ async function refresh() {
     document.querySelector<HTMLInputElement>("#screenshots")!.checked =
       !!state.screenshots;
   }
+  for (const id of ["enhanced-help", "screenshots-help"])
+    document.querySelector<HTMLElement>("#" + id)!.hidden = !!state?.active;
   status.dataset.error = "false";
   status.textContent = state?.active
     ? `Recording · ${state.mode}. ${state.warnings.join(" ")}`

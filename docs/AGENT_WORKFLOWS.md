@@ -1,5 +1,7 @@
 # Developer and agent workflows
 
+[Documentation home](README.md)
+
 ## Compact context and issue draft
 
 ```sh

@@ -1,16 +1,13 @@
 import { createServer } from "node:http";
 import { readFile } from "node:fs/promises";
+import { exampleStyles } from "../example-styles.mjs";
 export function createDemoServer({
   isFixed = () => process.env.TRACECASE_DEMO_FIXED === "1",
 } = {}) {
   return createServer(async (req, res) => {
-    if (req.url === "/tracecase-select.css") {
+    if (req.url === "/tracecase-demo.css") {
       res.writeHead(200, { "content-type": "text/css" });
-      res.end(
-        await readFile(
-          new URL("../../packages/ui/select.css", import.meta.url),
-        ),
-      );
+      res.end(exampleStyles());
       return;
     }
     if (req.url === "/api/privacy") {
@@ -54,14 +51,10 @@ export function createDemoServer({
         new URL("./index.html", import.meta.url),
         "utf8",
       );
-      const selectStyles = await readFile(
-        new URL("../../packages/ui/select.css", import.meta.url),
-        "utf8",
-      );
       res.end(
         html.replace(
-          '<link rel="stylesheet" href="/tracecase-select.css" />',
-          `<style>${selectStyles}</style>`,
+          '<link rel="stylesheet" href="/tracecase-demo.css" />',
+          `<style>${exampleStyles()}</style>`,
         ),
       );
       return;

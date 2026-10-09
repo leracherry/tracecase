@@ -23,18 +23,20 @@ TraceCase turns a browser bug into a portable `.tracecase` recording: actions, v
 
 _The checked-in demo, captured with the actual extension. See the [complete workflow](docs/WORKFLOWS.md)._
 
-> **Experimental alpha:** [`0.1.0-alpha.1` is available on GitHub](https://github.com/leracherry/tracecase/releases/tag/v0.1.0-alpha.1). The source checkout is preparing `0.1.0-alpha.2`; CI produces release bundles. Browser capture supports Chromium and Firefox standard mode from source. Executable replay is tested in Chromium, Firefox, and WebKit. See [compatibility and limits](docs/BROWSER_COMPATIBILITY.md).
+> **Experimental alpha:** [Download `0.1.0-alpha.1`](https://github.com/leracherry/tracecase/releases/tag/v0.1.0-alpha.1), or build the next alpha from source.
+>
+> The source build supports Chromium and Firefox standard capture. Replay is tested in Chromium, Firefox, and WebKit. See [compatibility and limits](docs/BROWSER_COMPATIBILITY.md).
 
 ## What you can do
 
-| Workflow                    | Result                                                                                                   |
-| --------------------------- | -------------------------------------------------------------------------------------------------------- |
-| **Record and inspect**      | Semantic actions, a searchable timeline, visual replay, console errors, and request details in one file. |
-| **Reproduce and verify**    | Separate checks for the observed failure and the expected behavior after a fix.                          |
-| **Replay captured APIs**    | Reproduce historical responses against a running frontend, with explicit mismatch reporting.             |
-| **Create regression tests** | Readable Playwright TypeScript, with optional standalone API fixtures.                                   |
-| **Hand off evidence**       | Markdown issue drafts, bounded agent context, read-only MCP tools, and a CI verification action.         |
-| **Control capture privacy** | Built-in redaction, custom sensitive fields and private elements, and a review before export.            |
+| Workflow                    | Result                                                        |
+| --------------------------- | ------------------------------------------------------------- |
+| **Record and inspect**      | Actions, visual replay, console errors, and request evidence. |
+| **Reproduce and verify**    | Separate checks for the failure and the expected fix.         |
+| **Replay captured APIs**    | Historical responses with explicit mismatch reporting.        |
+| **Create regression tests** | Readable Playwright tests with optional API fixtures.         |
+| **Hand off evidence**       | Issue drafts, agent context, read-only MCP, and CI checks.    |
+| **Control privacy**         | Sensitive-field rules, private elements, and export review.   |
 
 ## Quick start
 

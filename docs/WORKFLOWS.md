@@ -24,7 +24,7 @@ Select **Canada**, enter a postal code, and continue in the demo. After the tax 
 
 ![Checkout failure shown in visual replay alongside captured actions, a failed API request, and a bug marker](assets/screenshots/inspect.png)
 
-Timeline selection seeks visual replay. Search and filters help narrow the evidence; **API replay** accepts a replay report to show actual request coverage.
+Timeline selection seeks visual replay. Toggle **Actual size** to read details at the recorded scale, then toggle it off to fit the pane. Search and filters help narrow the evidence; **API replay** accepts a replay report to show actual request coverage.
 
 ## 4. Define the fix and review the evidence
 

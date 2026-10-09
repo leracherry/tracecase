@@ -1,5 +1,7 @@
 # Baseline redaction
 
+[Documentation home](README.md)
+
 Redaction happens before evidence is persisted.
 
 Semantic capture excludes password/hidden fields, `[data-private]` descendants, and fields whose identifiers indicate passwords, tokens, secrets, API keys, payment data, SSNs, email, or phone numbers. rrweb masks all input values and blocks private elements, frames, media, and canvas. Visual URL metadata and DOM attributes are also scrubbed for recognizable credential fields.

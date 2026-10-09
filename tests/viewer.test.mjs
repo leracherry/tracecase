@@ -1,3 +1,4 @@
+import { checkAccessibility, checkReflow } from "./ui-assertions.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
@@ -16,7 +17,7 @@ const sample = JSON.parse(
 );
 test(
   "local CLI viewer renders untrusted evidence safely, filters events, and removes export categories",
-  { timeout: 30000 },
+  { timeout: 60000 },
   async () => {
     const directory = await mkdtemp(join(tmpdir(), "tracecase-viewer-"));
     const timestamp = Date.now();
@@ -141,7 +142,8 @@ test(
         );
         child.stderr.on("data", (data) => reject(new Error(String(data))));
       });
-      const page = await browser.newPage();
+      const context = await browser.newContext();
+      const page = await context.newPage();
       const remote = [];
       page.on("request", (request) => {
         if (new URL(request.url()).hostname === "attacker.invalid")
@@ -164,7 +166,7 @@ test(
         0,
       );
       assert.deepEqual(remote, []);
-      await page.getByLabel("Filter timeline").selectOption("network");
+      await page.getByLabel("Event type").selectOption("network");
       assert.equal(await page.locator(".row").count(), 1);
       assert.ok(await page.locator(".row.failed").count());
       await page.locator(".row").click();
@@ -251,7 +253,12 @@ test(
                   sum + value * [0.2126, 0.7152, 0.0722][index],
                 0,
               );
-          const background = luminance([248, 250, 251]);
+          const background = luminance(
+            getComputedStyle(pre.parentElement)
+              .backgroundColor.match(/\d+/g)
+              .slice(0, 3)
+              .map(Number),
+          );
           return [
             ...new Set(
               [...pre.querySelectorAll("span")].map(
@@ -327,6 +334,20 @@ test(
         ),
       );
       assert.equal(await page.locator(".network-replay img").count(), 0);
+      const zoom = page.getByRole("button", {
+        name: "Actual size for visual replay",
+      });
+      await zoom.click();
+      assert.equal(await zoom.getAttribute("aria-pressed"), "true");
+      assert.equal(
+        await page
+          .locator(".replayer-wrapper")
+          .evaluate((el) => getComputedStyle(el).transform),
+        "matrix(1, 0, 0, 1, 0, 0)",
+      );
+      await zoom.click();
+      assert.equal(await zoom.getAttribute("aria-pressed"), "false");
+      await checkAccessibility(page, [".player"]); // Recorded third-party content is outside product UI scope.
       await page.screenshot({
         path: join(tmpdir(), "tracecase-brand-desktop.png"),
         fullPage: true,
@@ -341,6 +362,18 @@ test(
         path: join(tmpdir(), "tracecase-brand-mobile.png"),
         fullPage: true,
       });
+      for (const width of [320, 768, 1440]) {
+        await page.setViewportSize({ width, height: 900 });
+        await checkReflow(page);
+      }
+      // WCAG text-spacing overrides must not clip the interface or prevent reflow.
+      const spacing = await page.addStyleTag({
+        content:
+          "* { line-height: 1.5 !important; letter-spacing: .12em !important; word-spacing: .16em !important; } p { margin-bottom: 2em !important; }",
+      });
+      await page.setViewportSize({ width: 320, height: 900 });
+      await checkReflow(page);
+      await spacing.evaluate((el) => el.remove());
       await page.setViewportSize({ width: 1280, height: 720 });
       await page.getByLabel("Open replay report").setInputFiles({
         name: "wrong.json",
@@ -363,7 +396,7 @@ test(
         buffer: Buffer.from(JSON.stringify(coverageReport)),
       });
       await page.getByText("Network mismatch", { exact: true }).waitFor();
-      await page.getByLabel("Filter timeline").selectOption("all");
+      await page.getByLabel("Event type").selectOption("all");
       await page.getByLabel("Search timeline").fill("Captured console");
       assert.equal(await page.locator(".row").count(), 1);
       await page.getByLabel("Visual replay", { exact: true }).uncheck();
@@ -401,7 +434,7 @@ test(
         ),
       );
       assert.ok(await page.locator(".export-preview .hljs-keyword").count());
-      await page.getByLabel("Test networking").selectOption("recorded");
+      await page.getByLabel("API responses").selectOption("recorded");
       assert.equal(
         await page
           .getByRole("button", { name: "Download Playwright test" })
@@ -429,7 +462,7 @@ test(
         (await readFile(await issueFile.path(), "utf8")).includes("&lt;img"),
       );
       await page.getByLabel("Export format").selectOption("test");
-      await page.getByLabel("Test networking").selectOption("live");
+      await page.getByLabel("API responses").selectOption("live");
       await page
         .locator(".export-workbench")
         .screenshot({ path: join(tmpdir(), "tracecase-export-panel.png") });
@@ -456,6 +489,7 @@ test(
       await page.getByRole("alert").waitFor();
       await page.goto(new URL("/", url).href);
       await page.getByRole("button", { name: "Choose a recording" }).waitFor();
+      await checkAccessibility(page);
       const chooserPromise = page.waitForEvent("filechooser");
       await page.getByRole("button", { name: "Choose a recording" }).click();
       const chooser = await chooserPromise;
@@ -479,10 +513,7 @@ test(
         .getByRole("heading", { name: "No visual replay available" })
         .waitFor();
       assert.equal(await page.getByLabel("Search timeline").inputValue(), "");
-      assert.equal(
-        await page.getByLabel("Filter timeline").inputValue(),
-        "all",
-      );
+      assert.equal(await page.getByLabel("Event type").inputValue(), "all");
       assert.equal(
         await page
           .getByLabel("I reviewed the evidence for sensitive content.")
@@ -528,7 +559,7 @@ test(
           new URL("../examples/checkout-recorded.tracecase", import.meta.url),
         ),
       });
-      await page.getByLabel("Test networking").selectOption("recorded");
+      await page.getByLabel("API responses").selectOption("recorded");
       await page
         .getByLabel("Preview file")
         .selectOption({ label: "recording.fixtures.json" });

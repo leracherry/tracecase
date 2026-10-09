@@ -1,27 +1,37 @@
+@import "./openai-foundations.css";
 @import "./select.css";
 :root {
   color-scheme: light;
   --brand-ink: #0d252b;
   --brand-mint: #49dcbc;
   --brand-hover: #163940;
-  --surface: #ffffff;
-  --canvas: #fafafa;
-  --subtle: #f3f5f4;
-  --selected: #e6f7f2;
-  --border: #dedfe0;
-  --text: #202123;
-  --muted: #5f6368;
-  --positive: #176b56;
-  --danger: #a12b26;
-  --danger-surface: #fff2f0;
-  --warning: #80551e;
-  --warning-surface: #fff8e9;
-  --focus: #177b66;
-  --radius: 16px;
-  --radius-control: 10px;
-  --radius-small: 8px;
-  --control-border: #8b9696;
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --surface: var(--color-surface);
+  --canvas: var(--gray-50);
+  --subtle: var(--color-background-primary-soft);
+  --selected: var(--color-background-primary-soft);
+  --border: var(--color-border);
+  --text: var(--color-text);
+  --muted: var(--color-text-secondary);
+  --positive: var(--color-text-success);
+  --danger: var(--color-text-danger);
+  --danger-surface: var(--red-50);
+  --warning: var(--color-text-warning);
+  --warning-surface: var(--orange-50);
+  --focus: var(--color-text);
+  --radius: var(--radius-2xl);
+  --radius-control: var(--control-radius-lg);
+  --radius-small: var(--radius-md);
+  --control-border: var(--gray-400);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --reading-width: 68ch;
+  --page-width: 1440px;
+  --font: var(--font-sans);
 }
 * {
   box-sizing: border-box;
@@ -30,7 +40,7 @@ body {
   margin: 0;
   background: var(--canvas);
   color: var(--text);
-  font: 14px/1.5 var(--font);
+  font: var(--font-text-md-size)/1.5 var(--font);
 }
 button,
 input,
@@ -46,7 +56,7 @@ button,
   gap: 8px;
   min-height: 44px;
   padding: 8px 14px;
-  border: 1px solid var(--border);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-control);
   background: var(--surface);
   color: var(--text);
@@ -70,6 +80,7 @@ button[hidden] {
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
+textarea:focus-visible,
 a:focus-visible,
 summary:focus-visible,
 [tabindex]:focus-visible,
@@ -79,9 +90,9 @@ summary:focus-visible,
 }
 input,
 select {
-  accent-color: var(--positive);
+  accent-color: var(--text);
 }
-input:not([type="checkbox"]):not([type="file"]),
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
 select {
   min-height: 44px;
   padding: 9px 12px;
@@ -100,7 +111,7 @@ select {
 }
 code,
 pre {
-  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-family: var(--font-mono);
 }
 .muted,
 .hint {
@@ -122,7 +133,8 @@ button:not(:disabled):active,
 .button:active {
   border-color: var(--positive);
 }
-input[type="checkbox"] {
+input[type="checkbox"],
+input[type="radio"] {
   width: 18px;
   height: 18px;
   margin: 0;
@@ -133,7 +145,7 @@ input::placeholder {
   opacity: 1;
 }
 a {
-  color: var(--positive);
+  color: var(--color-text);
   text-underline-offset: 3px;
 }
 ::selection {
@@ -147,4 +159,49 @@ a {
     scroll-behavior: auto !important;
     transition: none !important;
   }
+}
+
+:root {
+  font-synthesis: none;
+}
+button,
+.button {
+  line-height: 1.4;
+}
+textarea {
+  font: inherit;
+}
+input[aria-invalid="true"],
+textarea[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+.field-error {
+  color: var(--danger);
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+@media (forced-colors: active) {
+  button,
+  .button,
+  input,
+  select,
+  textarea {
+    border-color: ButtonText;
+  }
+}
+
+/* State changes must not fade mint text across a light disabled surface. */
+.primary {
+  transition: none;
 }

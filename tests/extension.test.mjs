@@ -1,3 +1,4 @@
+import { checkAccessibility } from "./ui-assertions.mjs";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
@@ -71,6 +72,8 @@ for (const enhanced of [false, true])
         const popup = await context.newPage();
         await popup.goto(`chrome-extension://${id}/popup.html`);
 
+        if (!enhanced) await checkAccessibility(popup);
+        assert.ok((await popup.locator("body").boundingBox()).height <= 600);
         await popup.locator("body").screenshot({
           path: join(
             tmpdir(),
@@ -115,6 +118,11 @@ for (const enhanced of [false, true])
             has: target.getByRole("button", { name: "Mark bug", exact: true }),
           })
           .waitFor();
+        assert.equal(await popup.locator("#enhanced-help").isVisible(), false);
+        assert.equal(
+          await popup.locator("#screenshots-help").isVisible(),
+          false,
+        );
         await target
           .getByRole("button", { name: "Change address", exact: true })
           .click();
@@ -337,6 +345,12 @@ for (const enhanced of [false, true])
           .getByRole("button", { name: "Save privacy rules" })
           .click();
         await settings.getByRole("alert").waitFor();
+        assert.equal(await selectors.getAttribute("aria-invalid"), "true");
+        assert.equal(await fields.getAttribute("aria-invalid"), "false");
+        assert.ok(
+          await selectors.evaluate((el) => el === document.activeElement),
+        );
+        if (!enhanced) await checkAccessibility(settings);
         assert.deepEqual(
           (await request(settings, { type: "privacy:get" })).fields,
           [],
@@ -427,6 +441,7 @@ for (const enhanced of [false, true])
             .evaluate((el) => getComputedStyle(el).opacity),
           "1",
         );
+        if (!enhanced) await checkAccessibility(settings);
         // Save different defaults during capture; the running session must retain its rules.
         await request(settings, {
           type: "privacy:save",

@@ -1,5 +1,7 @@
 # Extension permissions
 
+[Documentation home](README.md)
+
 - `storage`: persist session metadata and custom privacy settings locally. Evidence batches are stored in IndexedDB.
 - `activeTab`: inspect the selected tab and capture opt-in standard-mode screenshots after the extension is invoked.
 - `scripting`: install the console-error bridge into the recorded page’s main world. No remote code is loaded.

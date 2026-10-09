@@ -1,5 +1,5 @@
 import { browser as chrome } from "wxt/browser";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   defaultPrivacyRules,
@@ -19,6 +19,17 @@ function PrivacySettings() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [fieldError, setFieldError] = useState("");
+  const [selectorError, setSelectorError] = useState("");
+  const fieldsInput = useRef<HTMLTextAreaElement>(null);
+  const selectorsInput = useRef<HTMLTextAreaElement>(null);
+  const errorMessage = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (!error) return;
+    if (fieldError) fieldsInput.current?.focus();
+    else if (selectorError) selectorsInput.current?.focus();
+    else errorMessage.current?.focus();
+  }, [error, fieldError, selectorError]);
   const apply = (rules: PrivacyRules) => {
     setFields(rules.fields.join("\n"));
     setSelectors(rules.selectors.join("\n"));
@@ -58,19 +69,35 @@ function PrivacySettings() {
         .split("\n")
         .map((line) => line.trim())
         .filter(Boolean);
-    let rules: PrivacyRules;
+    const fieldValues = lines(fields),
+      selectorValues = lines(selectors);
+    let invalidFields = "",
+      invalidSelectors = "";
     try {
-      rules = parsePrivacyRules({
-        version: 1,
-        fields: lines(fields),
-        selectors: lines(selectors),
-      });
+      parsePrivacyRules({ version: 1, fields: fieldValues, selectors: [] });
     } catch {
+      invalidFields =
+        "Use up to 50 names, each no longer than 64 characters. Start with a letter or underscore; use letters, numbers, underscores, dots or hyphens.";
+    }
+    try {
+      parsePrivacyRules({ version: 1, fields: [], selectors: selectorValues });
+    } catch {
+      invalidSelectors =
+        'Use up to 50 simple selectors, each no longer than 160 characters: .class, #id, [data-attribute], [name="field"] or [id="value"].';
+    }
+    setFieldError(invalidFields);
+    setSelectorError(invalidSelectors);
+    if (invalidFields || invalidSelectors) {
       setError(
-        'Check your rules. Use up to 50 entries per list. Field names must start with a letter or underscore (64 characters maximum). Page elements must use .class, #id, [data-attribute], or [name="field"] (160 characters maximum).',
+        "Check your rules. Correct the highlighted lists before saving.",
       );
       return;
     }
+    const rules = parsePrivacyRules({
+      version: 1,
+      fields: fieldValues,
+      selectors: selectorValues,
+    });
     setBusy(true);
     try {
       const result = parsePrivacyRules(
@@ -108,38 +135,62 @@ function PrivacySettings() {
       </div>
       <form onSubmit={(event) => void save(event)}>
         <fieldset disabled={!saved || busy}>
+          <legend className="sr-only">Capture privacy rules</legend>
           <div className="settings-grid">
-            <label>
-              Additional sensitive fields
-              <span id="fields-help" className="hint">
+            <div className="settings-field">
+              <label htmlFor="privacy-fields">
+                Additional sensitive fields
+              </label>
+              <p id="fields-help" className="hint">
                 One name per line. Exact, case-insensitive matching for
                 JSON/form fields, headers, URL query parameters and input names
                 or IDs.
-              </span>
+              </p>
               <textarea
-                aria-describedby="fields-help"
+                id="privacy-fields"
+                ref={fieldsInput}
+                aria-invalid={!!fieldError}
+                aria-describedby={
+                  fieldError ? "fields-help fields-error" : "fields-help"
+                }
                 value={fields}
                 onChange={(e) => {
                   setFields(e.target.value);
+                  setFieldError("");
+                  setError("");
                   setNotice("");
                 }}
                 spellCheck={false}
                 rows={7}
                 placeholder={"customer_id\ninternal_reference"}
               />
-            </label>
-            <label>
-              Private page elements
-              <span id="selectors-help" className="hint">
+              {fieldError && (
+                <span className="field-error" id="fields-error">
+                  {fieldError}
+                </span>
+              )}
+            </div>
+            <div className="settings-field">
+              <label htmlFor="privacy-selectors">Private page elements</label>
+              <p id="selectors-help" className="hint">
                 One selector per line. Excludes matching elements and their
                 descendants from actions and visual capture; hides them in
                 screenshots.
-              </span>
+              </p>
               <textarea
-                aria-describedby="selectors-help"
+                id="privacy-selectors"
+                ref={selectorsInput}
+                aria-invalid={!!selectorError}
+                aria-describedby={
+                  selectorError
+                    ? "selectors-help selectors-error"
+                    : "selectors-help"
+                }
                 value={selectors}
                 onChange={(e) => {
                   setSelectors(e.target.value);
+                  setSelectorError("");
+                  setError("");
                   setNotice("");
                 }}
                 spellCheck={false}
@@ -148,7 +199,12 @@ function PrivacySettings() {
                   ".customer-details\n#billing-summary\n[data-confidential]"
                 }
               />
-            </label>
+              {selectorError && (
+                <span className="field-error" id="selectors-error">
+                  {selectorError}
+                </span>
+              )}
+            </div>
           </div>
           <p className="hint">
             Supported selectors: <code>.class</code>, <code>#id</code>,{" "}
@@ -166,6 +222,8 @@ function PrivacySettings() {
                 apply(defaultPrivacyRules);
                 setNotice("");
                 setError("");
+                setFieldError("");
+                setSelectorError("");
               }}
             >
               Clear custom rules
@@ -180,7 +238,12 @@ function PrivacySettings() {
           </div>
         </fieldset>
         {error && (
-          <p className="settings-error" role="alert">
+          <p
+            className="settings-error"
+            role="alert"
+            tabIndex={-1}
+            ref={errorMessage}
+          >
             {error}
           </p>
         )}

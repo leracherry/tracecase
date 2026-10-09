@@ -1,5 +1,7 @@
 # Plugin API 1
 
+[Documentation home](README.md)
+
 Plugins are trusted local JavaScript modules explicitly selected with repeatable `--plugin` flags. They are never discovered in artifacts, loaded from remote URLs, or automatically enabled by a recording.
 
 ```sh
